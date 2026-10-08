@@ -868,7 +868,16 @@ function showMessage(page) {
     );
 
 }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 
+const SUPABASE_URL = "https://sklvzkjjjgyiyjhgxqfw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_J7vvXWQM9AnF5-PWZjmtKw_6MEs7Mev";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 </script>
 
 
