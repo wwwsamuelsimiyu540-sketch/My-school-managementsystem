@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Settings | My School System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b67;color:white;padding:18px}
+main{max-width:900px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin:20px 0;box-shadow:0 2px 8px #0001}
+label{display:block;margin-top:12px;font-weight:bold}
+input,select,textarea{width:100%;padding:11px;margin:7px 0;border:1px solid #cbd5e1;border-radius:6px;font:inherit}
+button{padding:11px 16px;border:0;border-radius:6px;background:#1266b1;color:white;cursor:pointer;margin:5px 3px 5px 0}
+.back{background:#475569}
+.danger{background:#dc2626}
+#message{font-weight:bold}
+.notice{padding:12px;background:#fff7ed;border-radius:8px;color:#9a3412}
+</style>
+</head>
+<body>
+<header>
+<h2>⚙️ My School System — Settings</h2>
+<p>Manage the school profile and preferences</p>
+</header><main>
+<button class="back" onclick="location.href='school-admin.html'">← Back to Dashboard</button><section class="card">
+<h3>School Profile</h3>
+<form id="settingsForm">
+<label>School Name *</label>
+<input id="schoolName" required placeholder="Enter school name"><label>School Registration Number</label>
+<input id="registrationNumber" placeholder="School registration number">
+
+<label>School Email</label>
+<input id="schoolEmail" type="email" placeholder="school@example.com">
+
+<label>Phone Number</label>
+<input id="schoolPhone" type="tel" placeholder="School phone number">
+
+<label>Physical Address</label>
+
+<textarea id="schoolAddress" rows="3" placeholder="Enter school address"></textarea><label>County</label>
+<input id="county" placeholder="e.g. Uasin Gishu">
+
+<label>School Level</label>
+<select id="schoolLevel">
+
+<option value="Primary">Primary</option>
+<option value="Junior Secondary">Junior Secondary</option>
+<option value="Senior Secondary">Senior Secondary</option>
+<option value="Secondary">Secondary</option>
+<option value="Mixed">Mixed</option>
+<option value="Other">Other</option>
+</select><label>Currency</label>
+<select id="currency">
+
+<option value="KES">Kenyan Shilling (KES)</option>
+<option value="USD">US Dollar (USD)</option>
+<option value="UGX">Ugandan Shilling (UGX)</option>
+<option value="TZS">Tanzanian Shilling (TZS)</option>
+</select><label>Academic Year</label>
+<input id="academicYear" placeholder="e.g. 2027">
+
+<label>School Motto</label>
+<input id="motto" placeholder="Enter school motto">
+
+<button type="submit">Save Settings</button>
+<button type="button" class="back" onclick="loadSettings()">Reload Saved Settings</button>
+
+</form>
+<p id="message" role="status"></p>
+</section><section class="card">
+<h3>Data and Privacy</h3>
+<p class="notice">
+This prototype saves settings in this browser only. It does not yet synchronize data to Supabase or provide administrator authentication.
+</p>
+<button type="button" class="danger" onclick="clearSettings()">Clear Saved School Settings</button>
+</section>
+</main><script>
+const STORAGE_KEY="mySchoolSettings";
+
+const fields=[
+  "schoolName","registrationNumber","schoolEmail","schoolPhone",
+  "schoolAddress","county","schoolLevel","currency","academicYear","motto"
+];
+
+function loadSettings(){
+  let settings={};
+
+  try{
+    settings=JSON.parse(localStorage.getItem(STORAGE_KEY))||{};
+  }catch{
+    settings={};
+  }
+
+  fields.forEach(id=>{
+    document.getElementById(id).value=settings[id]||"";
+  });
+
+  showMessage("Saved settings loaded.",false);
+}
+
+document.getElementById("settingsForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const settings={};
+
+  fields.forEach(id=>{
+    settings[id]=document.getElementById(id).value.trim();
+  });
+
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(settings));
+  showMessage("School settings saved in this browser.",false);
+});
+
+function clearSettings(){
+  if(!confirm("Clear the saved school profile from this browser?"))return;
+
+  localStorage.removeItem(STORAGE_KEY);
+  loadSettings();
+  showMessage("Saved school settings cleared.",false);
+}
+
+function showMessage(text,error){
+  const el=document.getElementById("message");
+  el.textContent=text;
+  el.style.color=error?"#dc2626":"#15803d";
+}
+
+loadSettings();
+</script></body>
+  </html>
