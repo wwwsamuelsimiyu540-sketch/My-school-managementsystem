@@ -106,57 +106,12 @@
  and marks.</p></div>
       
 <button type="button"
-  onclick="window.location.href='fee.html'">
+  onclick="window.location.href='fees.html'">
   Manage payments
 </button>
 
     </div>
-    
-<section id="teachersSection" class="tile"
-         style="display:none; margin-top:20px;">
-  <h2>Teachers Management</h2>
-  <p>Register and manage school teachers.</p>
 
-  <form id="teacherForm">
-    <label for="teacherName">Full name</label>
-    <input id="teacherName" type="text"
-           placeholder="Enter full name" required>
-
-    <label for="teacherEmail">Email address</label>
-    <input id="teacherEmail" type="email"
-           placeholder="teacher@example.com">
-
-    <label for="teacherPhone">Phone number</label>
-    <input id="teacherPhone" type="tel"
-           placeholder="Enter phone number">
-
-    <button type="submit" id="saveTeacherButton">
-      Save Teacher
-    </button>
-  </form>
-
-  <p id="teacherMessage" role="status" aria-live="polite"></p>
-
-  <button type="button" id="refreshTeachersButton">
-    Refresh Teachers
-  </button>
-
-  <div style="overflow-x:auto;">
-    <table style="width:100%; border-collapse:collapse; margin-top:15px;">
-      <thead>
-        <tr>
-          <th style="text-align:left;padding:8px;">Name</th>
-          <th style="text-align:left;padding:8px;">Email</th>
-          <th style="text-align:left;padding:8px;">Phone</th>
-          <th style="text-align:left;padding:8px;">Action</th>
-        </tr>
-      </thead>
-      <tbody id="teachersTableBody">
-        <tr><td colspan="4">Loading teachers...</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
 
     <button id="logoutButton">Log out</button>
   </main>
