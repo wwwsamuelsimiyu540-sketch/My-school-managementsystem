@@ -85,14 +85,7 @@
   Manage Students
 </button>
         
-      
-<div class="tile">
-  <h3>Teachers</h3>
-  <p>Register and manage teachers.</p>
-  <button type="button" id="openTeachersButton">
-    Manage Teachers
-  </button>
-</div>
+<button id="teachersBtn">Manage Teachers</button>
       
     
 <button type="button"
@@ -407,7 +400,9 @@ document.getElementById("openTeachersButton")
 
     loadTeachers();
   });
-    
+    document.getElementById("teachersBtn").addEventListener("click", function () {
+  window.location.href = "teachers.html";
+});
     
   </script>
   
