@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subject Management | School System</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    header {
+      background: #123b70;
+      color: white;
+      padding: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    header h1 { margin: 0; font-size: 22px; }
+
+    main {
+      max-width: 900px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px #0000000d;
+    }
+
+    h2 { color: #123b70; margin-top: 0; }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 3px;
+    }
+
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .primary { background: #1763c6; color: white; }
+    .secondary { background: #475569; color: white; }
+    .danger { background: #dc2626; color: white; }
+
+    .message {
+      display: none;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .error { display: block; background: #fee2e2; color: #991b1b; }
+    .success { display: block; background: #dcfce7; color: #166534; }
+
+    .table-wrapper { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 350px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    th { background: #eaf1fb; }
+
+    #subjectCount { color: #475569; margin-bottom: 12px; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Subject Management</h1>
+    <div>
+      <button id="dashboardBtn" class="secondary">Dashboard</button>
+      <button id="logoutBtn" class="danger">Log Out</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="message" class="message" role="status"></div>
+
+    <section class="card">
+      <h2 id="formTitle">Add a Subject</h2>
+
+      <form id="subjectForm">
+        <label for="subjectName">Subject Name *</label>
+        <input
+          type="text"
+          id="subjectName"
+          maxlength="100"
+          placeholder="Example: Mathematics"
+          required
+        >
+
+        <button type="submit" id="saveBtn" class="primary">
+          Save Subject
+        </button>
+
+        <button type="button" id="cancelBtn" class="secondary" hidden>
+          Cancel Edit
+        </button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Registered Subjects</h2>
+      <div id="subjectCount">Loading subjects...</div>
+
+      <label for="searchInput">Search subjects</label>
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Type a subject name..."
+      >
+
+      <button type="button" id="refreshBtn" class="primary">
+        Refresh
+      </button>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Subject Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="subjectTable">
+            <tr><td colspan="3">Loading subjects...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Use the same Supabase URL and publishable key as index.html.
+    const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const form = document.getElementById("subjectForm");
+    const subjectNameInput = document.getElementById("subjectName");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const formTitle = document.getElementById("formTitle");
+    const subjectTable = document.getElementById("subjectTable");
+    const subjectCount = document.getElementById("subjectCount");
+    const searchInput = document.getElementById("searchInput");
+    const message = document.getElementById("message");
+
+    let subjects = [];
+    let editingId = null;
+
+    function showMessage(text, type = "error") {
+      message.textContent = text;
+      message.className = "message " + type;
+    }
+
+    function clearMessage() {
+      message.textContent = "";
+      message.className = "message";
+    }
+
+    async function checkLogin() {
+      const { data, error } = await client.auth.getSession();
+
+      if (error) {
+        showMessage("Could not check login: " + error.message);
+        return false;
+      }
+
+      if (!data.session) {
+        window.location.replace("index.html");
+        return false;
+      }
+
+      return true;
+    }
+
+    async function loadSubjects() {
+      clearMessage();
+      subjectCount.textContent = "Loading subjects...";
+      subjectTable.replaceChildren();
+
+      const { data, error } = await client
+        .from("subjects")
+        .select("id, subject_name")
+        .order("id", { ascending: true });
+
+      if (error) {
+        subjectCount.textContent = "Could not load subjects.";
+        showMessage(error.message);
+        return;
+      }
+
+      subjects = data || [];
+      renderSubjects();
+    }
+
+    function renderSubjects() {
+      const search = searchInput.value.trim().toLowerCase();
+
+      const filtered = subjects.filter(function (subject) {
+        return (subject.subject_name || "").toLowerCase().includes(search);
+      });
+
+      subjectCount.textContent =
+        "Total subjects: " + subjects.length +
+        " | Displaying: " + filtered.length;
+
+      subjectTable.replaceChildren();
+
+      if (filtered.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 3;
+        cell.textContent = subjects.length === 0
+          ? "No subjects registered yet."
+          : "No matching subjects found.";
+        row.appendChild(cell);
+        subjectTable.appendChild(row);
+        return;
+      }
+
+      filtered.forEach(function (subject, index) {
+        const row = document.createElement("tr");
+
+        const numberCell = document.createElement("td");
+        numberCell.textContent = String(index + 1);
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = subject.subject_name;
+
+        const actionCell = document.createElement("td");
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "primary";
+        editBtn.textContent = "Edit";
+        editBtn.addEventListener("click", function () {
+          editingId = subject.id;
+          subjectNameInput.value = subject.subject_name;
+          formTitle.textContent = "Edit Subject";
+          saveBtn.textContent = "Update Subject";
+          cancelBtn.hidden = false;
+          clearMessage();
+          subjectNameInput.focus();
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "danger";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", function () {
+          deleteSubject(subject);
+        });
+
+        actionCell.append(editBtn, deleteBtn);
+        row.append(numberCell, nameCell, actionCell);
+        subjectTable.appendChild(row);
+      });
+    }
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      clearMessage();
+
+      const subjectName = subjectNameInput.value.trim();
+
+      if (!subjectName) {
+        showMessage("Please enter a subject name.");
+        return;
+      }
+
+      saveBtn.disabled = true;
+
+      try {
+        let result;
+
+        if (editingId !== null) {
+          result = await client
+            .from("subjects")
+            .update({ subject_name: subjectName })
+            .eq("id", editingId)
+            .select("id");
+        } else {
+          result = await client
+            .from("subjects")
+            .insert([{ subject_name: subjectName }])
+            .select("id");
+        }
+
+        if (result.error) {
+          if (result.error.code === "23505") {
+            showMessage("That subject already exists.");
+          } else {
+            showMessage(result.error.message);
+          }
+          return;
+        }
+
+        if (!result.data || result.data.length === 0) {
+          showMessage("No change was made. Check your Supabase permissions.");
+          return;
+        }
+
+        const wasEditing = editingId !== null;
+        resetForm();
+
+        showMessage(
+          wasEditing ? "Subject updated successfully." : "Subject added successfully.",
+          "success"
+        );
+
+        await loadSubjects();
+      } catch (error) {
+        showMessage(error.message || "An unexpected error occurred.");
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+
+    async function deleteSubject(subject) {
+      if (!window.confirm(
+        "Delete " + subject.subject_name + "?\n\n" +
+        "Subjects linked to assessments may not be deletable."
+      )) {
+        return;
+      }
+
+      clearMessage();
+
+      const { data, error } = await client
+        .from("subjects")
+        .delete()
+        .eq("id", subject.id)
+        .select("id");
+
+      if (error) {
+        showMessage(
+          error.code === "23503"
+            ? "This subject is linked to assessments or timetable records. Remove or reassign those records first."
+            : error.message
+        );
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        showMessage("Subject not deleted. Check your Supabase permissions.");
+        return;
+      }
+
+      if (editingId === subject.id) resetForm();
+
+      showMessage("Subject deleted successfully.", "success");
+      await loadSubjects();
+    }
+
+    function resetForm() {
+      form.reset();
+      editingId = null;
+      formTitle.textContent = "Add a Subject";
+      saveBtn.textContent = "Save Subject";
+      cancelBtn.hidden = true;
+    }
+
+    cancelBtn.addEventListener("click", function () {
+      resetForm();
+      clearMessage();
+    });
+
+    searchInput.addEventListener("input", renderSubjects);
+    document.getElementById("refreshBtn").addEventListener("click", loadSubjects);
+
+    document.getElementById("dashboardBtn").addEventListener("click", function () {
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async function () {
+      if (!window.confirm("Are you sure you want to log out?")) return;
+
+      const { error } = await client.auth.signOut();
+
+      if (error) {
+        showMessage(error.message);
+        return;
+      }
+
+      window.location.replace("index.html");
+    });
+
+    async function startPage() {
+      if (await checkLogin()) {
+        await loadSubjects();
+      }
+    }
+
+    startPage();
+  </script>
+</body>
+  </html>
+  
