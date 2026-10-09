@@ -169,8 +169,9 @@
             "Login successful. Role: " + profile.role;
 
           if (profile.role === "platform_developer") {
-            message.textContent +=
-              " Your developer dashboard is the next page we will build.";
+  window.location.href = "developer-dashboard.html";
+  return;
+}
           } else if (profile.role === "school_admin") {
             if (!profile.school_id) {
               throw new Error("Your account is not assigned to a school.");
