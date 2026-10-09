@@ -1,71 +1,149 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My School System - Developer Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>My School System — Developer Panel</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f2f5fa;color:#172033}
-header{background:#12345a;color:white;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-header h1{font-size:21px;margin:0}header p{margin:5px 0 0;font-size:13px;opacity:.8}
-main{max-width:1200px;margin:22px auto;padding:0 14px}.layout{display:grid;grid-template-columns:220px 1fr;gap:16px}
-.card,.sidebar,.stat{background:white;border:1px solid #dce4ef;border-radius:12px;padding:17px;margin-bottom:16px}
-.sidebar{align-self:start;padding:10px}.nav{display:block;width:100%;padding:12px;border:0;border-radius:7px;text-align:left;background:white;cursor:pointer;margin:3px 0;color:#172033}.nav.active,.nav:hover{background:#e8f1fc;color:#1769aa}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{margin:0}.label{font-size:13px;color:#65748b}.num{font-size:25px;font-weight:bold;margin-top:8px}
-button{background:#1769aa;color:white;border:0;border-radius:7px;padding:11px 14px;font-weight:bold;cursor:pointer}button:disabled{opacity:.5}input{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:7px;margin:6px 0 14px}
-label{font-weight:bold;font-size:13px}.muted{color:#65748b;font-size:13px;line-height:1.5}.message{font-size:14px;overflow-wrap:anywhere;margin-top:12px}.error{color:#b42318}.success{color:#087443}.hidden{display:none!important}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.tile{border:1px solid #dce4ef;padding:13px;border-radius:9px}.tile h3{font-size:15px;margin:0 0 7px}.tile p{font-size:12px;color:#65748b;margin:0;line-height:1.4}
-.item{border:1px solid #dce4ef;padding:14px;border-radius:9px;margin-top:10px;overflow-wrap:anywhere}.item h3{margin:0 0 8px}.login{max-width:430px;margin:7vh auto;padding:22px;background:white;border:1px solid #dce4ef;border-radius:12px}
-@media(max-width:760px){.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:450px){.grid{grid-template-columns:1fr}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#102442;color:white;padding:20px}
+header h2{margin:0}
+.layout{display:flex;min-height:100vh}
+aside{width:240px;background:#172b4d;padding:15px;flex-shrink:0}
+aside button{display:block;width:100%;text-align:left;margin:4px 0;padding:12px;background:transparent;color:white;border:0;border-radius:6px;cursor:pointer}
+aside button:hover,aside button.active{background:#2563eb}
+main{padding:22px;flex:1;min-width:0}
+section{display:none}
+section.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.card,.box{background:white;padding:18px;border-radius:10px;box-shadow:0 2px 7px #0001;margin-bottom:15px}
+.card small{color:#64748b}
+.card h2{margin:12px 0 0}
+input,select{width:100%;padding:11px;margin:7px 0 14px;border:1px solid #cbd5e1;border-radius:5px}
+.action{background:#2563eb;color:white;padding:11px 15px;border:0;border-radius:5px;cursor:pointer}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{text-align:left;padding:11px;border-bottom:1px solid #e2e8f0}
+.tablewrap{overflow-x:auto}
+.notice{padding:12px;background:#dbeafe;border-radius:6px;margin-bottom:15px}
+@media(max-width:700px){.layout{display:block}aside{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}aside button{font-size:12px}main{padding:12px}}
 </style>
 </head>
 <body>
-<header><div><h1>My School System</h1><p>Platform Developer Control Centre</p></div><div><span id="who"></span> <button id="logout" class="hidden">Sign out</button></div></header>
-<section id="login" class="login">
-<h2>Developer sign in</h2><p class="muted">Use the Supabase Auth account already authorized as platform developer.</p>
-<form id="loginForm"><label>Email</label><input id="email" type="email" required autocomplete="username"><label>Password</label><input id="password" type="password" required autocomplete="current-password"><button id="loginButton">Sign in</button></form><div id="loginMsg" class="message"></div>
-</section>
-<main id="app" class="hidden"><div class="layout">
-<aside class="sidebar">
-<button class="nav active" data-view="overview">Dashboard overview</button>
-<button class="nav" data-view="applications">School applications</button>
-<button class="nav" data-view="directory">School directory</button>
-<button class="nav" data-view="admins">Administrator access</button>
-<button class="nav" data-view="subscriptions">Subscriptions</button>
-<button class="nav" data-view="payments">Payment review</button>
-<button class="nav" data-view="security">Security and audit</button>
-<button class="nav" data-view="settings">Platform settings</button>
-</aside>
-<div>
-<section id="view-overview" class="view">
-<div class="card"><h2>Developer dashboard</h2><p class="muted">Review school onboarding and platform operations. Database permissions control what each account can do.</p><button id="refresh">Refresh</button><div id="mainMsg" class="message"></div></div>
-<div class="stats"><div class="stat"><div class="label">All schools</div><div class="num" id="total">—</div></div><div class="stat"><div class="label">Pending applications</div><div class="num" id="pending">—</div></div><div class="stat"><div class="label">Active schools</div><div class="num" id="active">—</div></div><div class="stat"><div class="label">Payments to review</div><div class="num" id="payments">—</div></div></div>
-<div class="card"><h2>Platform modules</h2><div id="tiles" class="grid"></div></div>
-</section>
-<section id="view-applications" class="view hidden"><div class="card"><h2>School applications</h2><p class="muted">Pending applications appear here after a school submits registration.</p><button id="loadApps">Load applications</button><div id="appsMsg" class="message"></div><div id="appsList"></div></div></section>
-<section id="view-directory" class="view hidden"><div class="card"><h2>School directory</h2><p class="muted">A protected listing function is needed before school records can be displayed here.</p><button id="directoryBtn">Check connection</button><div id="directoryMsg" class="message"></div></div></section>
-<section id="view-admins" class="view hidden"><div class="card"><h2>Administrator access</h2><p>First create or invite the school administrator's account in Supabase Authentication. We will connect administrator assignment after testing the secure approval function.</p></div></section>
-<section id="view-subscriptions" class="view hidden"><div class="card"><h2>Subscriptions</h2><p class="muted">Subscription listing and status management require protected developer-only database functions.</p></div></section>
-<section id="view-payments" class="view hidden"><div class="card"><h2>Manual payment review</h2><p class="muted">Verify funds before confirming a school subscription payment. Payment review controls will be connected through a protected backend function.</p></div></section>
-<section id="view-security" class="view hidden"><div class="card"><h2>Security and audit</h2><p class="muted">Developer authorization is checked by Supabase. Audit logging and multi-factor authentication still need to be completed and tested before production.</p></div></section>
-<section id="view-settings" class="view hidden"><div class="card"><h2>Platform settings</h2><p class="muted">Platform-wide settings will be connected after database permissions and audit logging are complete.</p></div></section>
-</div></div></main>
-<script>
-const SUPABASE_URL="https://apshhzczrofxwjsgenlv.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY="REPLACE_WITH_YOUR_SB_PUBLISHABLE_KEY";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const $=id=>document.getElementById(id);
-const modules=[["School applications","Review pending registrations"],["School directory","View school status"],["Administrator access","Assign first administrator"],["Subscriptions","Monitor trials and expiry"],["Manual payment review","Review payment references"],["Platform security","Protect accounts and school data"],["Audit logs","Track important actions"],["School settings","Configure platform defaults"],["Plans and pricing","Monthly and annual plans"],["Reports and analytics","Platform-wide summaries"],["Support requests","Help schools resolve issues"],["Notifications","Platform announcements"]];
-modules.forEach(([title,desc])=>{const d=document.createElement("div");d.className="tile";const h=document.createElement("h3");h.textContent=title;const p=document.createElement("p");p.textContent=desc;d.append(h,p);$("tiles").appendChild(d)});
-function msg(id,text,type=""){ $(id).textContent=text;$(id).className="message "+type; }
-function signedIn(user){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");$("who").textContent=user.email||"Signed in";}
-function signedOut(){$("app").classList.add("hidden");$("login").classList.remove("hidden");$("logout").classList.add("hidden");$("who").textContent="";}
-async function loadApps(){msg("appsMsg","Loading applications...");$("appsList").replaceChildren();const {data,error}=await db.rpc("msys_list_pending_schools");if(error){msg("appsMsg","Could not load applications: "+error.message,"error");return null;}if(!data||!data.length){msg("appsMsg","No pending school applications yet.");return [];}data.forEach(s=>{const box=document.createElement("div");box.className="item";const h=document.createElement("h3");h.textContent=s.school_name;const p=document.createElement("p");p.textContent="Code: "+(s.school_code||"Not assigned")+" | Status: "+s.status;const c=document.createElement("p");c.textContent="Email: "+(s.email||"—")+" | Phone: "+(s.phone||"—");const id=document.createElement("p");id.className="muted";id.textContent="School ID: "+s.id;box.append(h,p,c,id);$("appsList").appendChild(box)});msg("appsMsg",data.length+" pending application(s).","success");return data;}
-async function verifyDeveloper(){const {data,error}=await db.rpc("msys_list_pending_schools");if(error){signedOut();msg("loginMsg","Signed in but developer authorization could not be verified. Confirm your UID is in msys_platform_admins and the protected listing function exists. "+error.message,"error");return false;}return true;}
-async function refresh(){const data=await loadApps();if(data===null)return;$("pending").textContent=data.length;$("total").textContent="—";$("active").textContent="—";$("payments").textContent="—";msg("mainMsg","Developer connection checked. Other statistics will be added after secure backend functions are ready.","success");}
-$("loginForm").addEventListener("submit",async e=>{e.preventDefault();$("loginButton").disabled=true;msg("loginMsg","Signing in...");try{if(SUPABASE_PUBLISHABLE_KEY.startsWith("REPLACE_"))throw Error("Replace the placeholder with your Supabase publishable key.");const {data,error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error)throw error;if(await verifyDeveloper()){const {data:{user}}=await db.auth.getUser();signedIn(user);await refresh();}}catch(e){msg("loginMsg",e.message||"Sign-in failed","error");}finally{$("loginButton").disabled=false;}});
+<header>
+<h2>MY SCHOOL SYSTEM</h2>
+<p>Platform Developer Control Centre</p>
+</header><div class="layout">
+<aside id="menu"></aside>
+<main>
+<div class="notice">Developer dashboard prototype. Database connection and secure authentication will be configured in later steps.</div><section id="dashboard" class="active">
+<h2>Platform Overview</h2>
+<div class="cards" id="stats"></div>
+<div class="box"><h3>System Activity</h3><p id="activity">Dashboard initialized.</p></div>
+</section><section id="schools"><h2>School Management</h2><div class="box"><div class="tablewrap"><table><thead><tr><th>School</th><th>Location</th><th>Status</th></tr></thead><tbody id="schoolRows"></tbody></table></div></div></section><section id="register"><h2>Register School</h2><div class="box"><form id="schoolForm"><label>School Name</label><input id="schoolName" required maxlength="120"><label>School Location</label><input id="schoolLocation" required maxlength="120"><label>Contact Email</label><input id="schoolEmail" type="email" required><button class="action">Register School</button></form></div></section><section id="approvals"><h2>School Approvals</h2><div class="box"><p>Review newly registered schools and their status here.</p><div class="tablewrap"><table><thead><tr><th>School</th><th>Status</th><th>Action</th></tr></thead><tbody id="approvalRows"></tbody></table></div></div></section><section id="users"><h2>User Management</h2><div class="box">Manage platform user accounts after authentication and database integration.</div></section>
+<section id="admins"><h2>School Administrators</h2><div class="box">Administrator assignment will be connected to secure user roles.</div></section>
+<section id="students"><h2>Student Management</h2><div class="box">Student records will be managed by each school's authorized staff.</div></section>
+<section id="teachers"><h2>Teacher Management</h2><div class="box">Teacher records and assignments.</div></section>
+<section id="classes"><h2>Classes and Streams</h2><div class="box">Configure classes and streams.</div></section>
+<section id="subjects"><h2>Subjects</h2><div class="box">Configure subjects and subject assignments.</div></section>
+<section id="exams"><h2>Examinations</h2><div class="box">Examination schedules and results.</div></section>
+<section id="results"><h2>Results and Report Cards</h2><div class="box">Academic results and report cards.</div></section>
+<section id="attendance"><h2>Attendance</h2><div class="box">Student and staff attendance records.</div></section>
+<section id="timetable"><h2>Timetables</h2><div class="box">Lesson and examination timetables.</div></section>
+<section id="fees"><h2>Fees Management</h2><div class="box">Fee structures and student balances.</div></section>
+<section id="payments"><h2>Payments</h2><div class="box">Payment records and reconciliation.</div></section>
+<section id="reports"><h2>Platform Reports</h2><div class="box">Registration and platform usage reports.</div></section>
+<section id="subscriptions"><h2>Subscriptions</h2><div class="box">School plans and subscription status.</div></section>
+<section id="billing"><h2>Billing</h2><div class="box">Billing records and invoices.</div></section>
+<section id="messages"><h2>Announcements</h2><div class="box">Platform-wide announcements.</div></section>
+<section id="support"><h2>Support Centre</h2><div class="box">Support requests and issue tracking.</div></section>
+<section id="security"><h2>Security and Roles</h2><div class="box">Configure role-based access through Supabase in a later step.</div></section>
+<section id="audit"><h2>Audit Logs</h2><div class="box">Track important platform actions.</div></section>
+<section id="settings"><h2>Platform Settings</h2><div class="box">Platform name: My School System</div></section>
+<section id="backup"><h2>Backup and Recovery</h2><div class="box">Database backup procedures will be configured after Supabase integration.</div></section>
+<section id="maintenance"><h2>System Maintenance</h2><div class="box">Maintenance status and service notices.</div></section>
+<section id="help"><h2>Help</h2><div class="box">My School System developer documentation.</div></section>
+</main>
+</div><script>
+const pages=[
+["dashboard","Dashboard"],["schools","Schools"],["register","Register School"],
+["approvals","School Approvals"],["users","Users"],["admins","School Admins"],
+["students","Students"],["teachers","Teachers"],["classes","Classes"],
+["subjects","Subjects"],["exams","Examinations"],["results","Results"],
+["attendance","Attendance"],["timetable","Timetables"],["fees","Fees"],
+["payments","Payments"],["reports","Reports"],["subscriptions","Subscriptions"],
+["billing","Billing"],["messages","Announcements"],["support","Support"],
+["security","Security & Roles"],["audit","Audit Logs"],["settings","Settings"],
+["backup","Backup & Recovery"],["maintenance","Maintenance"],["help","Help"]
+];
+
+const menu=document.getElementById("menu");
+pages.forEach(([id,label])=>{
+const b=document.createElement("button");
+b.textContent=label;
+b.onclick=()=>openPage(id,b);
+menu.appendChild(b);
+});
+
+function openPage(id,button){
+document.querySelectorAll("main section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+document.querySelectorAll("aside button").forEach(b=>b.classList.remove("active"));
+if(button)button.classList.add("active");
+}
+
+let schools=[];
+try{schools=JSON.parse(localStorage.getItem("mss_schools")||"[]");}catch(e){schools=[];}
+
+function safe(v){
+return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function render(){
+document.getElementById("stats").innerHTML=[
+["Registered Schools",schools.length],
+["Pending Approvals",schools.filter(s=>s.status==="Pending").length],
+["Approved Schools",schools.filter(s=>s.status==="Approved").length],
+["Platform Modules",pages.length]
+].map(([label,value])=>`<div class="card"><small>${label}</small><h2>${value}</h2></div>`).join("");
+
+document.getElementById("schoolRows").innerHTML=schools.map(s=>
+`<tr><td>${safe(s.name)}</td><td>${safe(s.location)}</td><td>${safe(s.status)}</td></tr>`
+).join("");
+
+document.getElementById("approvalRows").innerHTML=schools.map((s,i)=>
+`<tr><td>${safe(s.name)}</td><td>${safe(s.status)}</td><td>${s.status==="Pending"?`<button class="action" onclick="approve(${i})">Approve</button>`:"—"}</td></tr>`
+).join("");
+}
+
+function save(){
+localStorage.setItem("mss_schools",JSON.stringify(schools));
+render();
+}
+
+document.getElementById("schoolForm").addEventListener("submit",e=>{
+e.preventDefault();
+schools.push({
+name:document.getElementById("schoolName").value.trim(),
+location:document.getElementById("schoolLocation").value.trim(),
+email:document.getElementById("schoolEmail").value.trim(),
+status:"Pending"
+});
+save();
+e.target.reset();
+document.getElementById("activity").textContent="A school was registered in this browser prototype.";
+openPage("schools");
+});
+
+function approve(i){
+schools[i].status="Approved";
+save();
+document.getElementById("activity").textContent="School status updated in this browser prototype.";
+}
+
+render();
+openPage("dashboard",menu.querySelector("button"));
+</script></body>
+                             </html>"password").value});if(error)throw error;if(await verifyDeveloper()){const {data:{user}}=await db.auth.getUser();signedIn(user);await refresh();}}catch(e){msg("loginMsg",e.message||"Sign-in failed","error");}finally{$("loginButton").disabled=false;}});
 $("refresh").addEventListener("click",refresh);$("loadApps").addEventListener("click",loadApps);
 $("directoryBtn").addEventListener("click",()=>msg("directoryMsg","Not connected yet. We will add a protected school directory function next."));
 $("logout").addEventListener("click",async()=>{const {error}=await db.auth.signOut();if(error){msg("mainMsg",error.message,"error");return;}signedOut();});
