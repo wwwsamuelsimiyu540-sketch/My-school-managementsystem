@@ -1,0 +1,417 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Management | School System</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    header {
+      background: #123b70;
+      color: white;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    header h1 { margin: 0; font-size: 22px; }
+
+    main {
+      max-width: 900px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px #0000000d;
+    }
+
+    h2 { color: #123b70; margin-top: 0; }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 16px;
+      margin: 8px 0 14px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 3px;
+    }
+
+    .primary { background: #1763c6; color: white; }
+    .secondary { background: #475569; color: white; }
+    .danger { background: #dc2626; color: white; }
+
+    .message {
+      display: none;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .error { display: block; background: #fee2e2; color: #991b1b; }
+    .success { display: block; background: #dcfce7; color: #166534; }
+
+    .table-wrapper { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 350px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+
+    th { background: #eaf1fb; }
+
+    #classCount { margin-bottom: 12px; color: #475569; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Class Management</h1>
+    <div>
+      <button id="dashboardBtn" class="secondary">Dashboard</button>
+      <button id="logoutBtn" class="danger">Log Out</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="message" class="message" role="status"></div>
+
+    <section class="card">
+      <h2>Add a Class or Grade</h2>
+
+      <form id="classForm">
+        <label for="className">Class name</label>
+        <input
+          id="className"
+          type="text"
+          maxlength="100"
+          placeholder="Example: Grade 1"
+          required
+        >
+
+        <button id="saveBtn" class="primary" type="submit">
+          Add Class
+        </button>
+
+        <button
+          id="cancelBtn"
+          class="secondary"
+          type="button"
+          hidden
+        >
+          Cancel Edit
+        </button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Registered Classes</h2>
+      <div id="classCount">Loading classes...</div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Class Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="classTable">
+            <tr><td colspan="3">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Use the same Supabase URL and publishable key as index.html.
+    const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const form = document.getElementById("classForm");
+    const nameInput = document.getElementById("className");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const tableBody = document.getElementById("classTable");
+    const classCount = document.getElementById("classCount");
+    const message = document.getElementById("message");
+
+    let classes = [];
+    let editingId = null;
+
+    function showMessage(text, type = "error") {
+      message.textContent = text;
+      message.className = "message " + type;
+    }
+
+    function clearMessage() {
+      message.textContent = "";
+      message.className = "message";
+    }
+
+    async function checkLogin() {
+      const { data, error } = await client.auth.getSession();
+
+      if (error) {
+        showMessage("Could not check login: " + error.message);
+        return false;
+      }
+
+      if (!data.session) {
+        window.location.replace("index.html");
+        return false;
+      }
+
+      return true;
+    }
+
+    async function loadClasses() {
+      clearMessage();
+      classCount.textContent = "Loading classes...";
+      tableBody.replaceChildren();
+
+      const { data, error } = await client
+        .from("classes")
+        .select("id, class_name, created_at")
+        .order("id", { ascending: true });
+
+      if (error) {
+        classCount.textContent = "Could not load classes.";
+        showMessage(error.message);
+        return;
+      }
+
+      classes = data || [];
+      renderClasses();
+    }
+
+    function renderClasses() {
+      classCount.textContent = "Total classes: " + classes.length;
+      tableBody.replaceChildren();
+
+      if (classes.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 3;
+        cell.textContent = "No classes found. Add your first class above.";
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+        return;
+      }
+
+      classes.forEach(function (item, index) {
+        const row = document.createElement("tr");
+
+        const numberCell = document.createElement("td");
+        numberCell.textContent = String(index + 1);
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = item.class_name;
+
+        const actionsCell = document.createElement("td");
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "primary";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", function () {
+          editingId = item.id;
+          nameInput.value = item.class_name;
+          saveBtn.textContent = "Update Class";
+          cancelBtn.hidden = false;
+          clearMessage();
+          nameInput.focus();
+        });
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "danger";
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", function () {
+          deleteClass(item);
+        });
+
+        actionsCell.append(editButton, deleteButton);
+        row.append(numberCell, nameCell, actionsCell);
+        tableBody.appendChild(row);
+      });
+    }
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      clearMessage();
+
+      const className = nameInput.value.trim();
+
+      if (!className) {
+        showMessage("Please enter a class name.");
+        return;
+      }
+
+      saveBtn.disabled = true;
+
+      try {
+        let result;
+
+        if (editingId !== null) {
+          result = await client
+            .from("classes")
+            .update({ class_name: className })
+            .eq("id", editingId)
+            .select("id");
+        } else {
+          result = await client
+            .from("classes")
+            .insert([{ class_name: className }])
+            .select("id");
+        }
+
+        if (result.error) {
+          if (result.error.code === "23505") {
+            showMessage("That class name already exists.");
+          } else {
+            showMessage(result.error.message);
+          }
+          return;
+        }
+
+        if (!result.data || result.data.length === 0) {
+          showMessage("No change was made. Check your Supabase permissions.");
+          return;
+        }
+
+        const wasEditing = editingId !== null;
+        resetForm();
+
+        showMessage(
+          wasEditing ? "Class updated successfully." : "Class added successfully.",
+          "success"
+        );
+
+        await loadClasses();
+      } catch (error) {
+        showMessage(error.message || "An unexpected error occurred.");
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+
+    async function deleteClass(item) {
+      const confirmed = window.confirm(
+        "Delete " + item.class_name + "?\n\n" +
+        "A class linked to students or other records may not be deletable."
+      );
+
+      if (!confirmed) return;
+
+      clearMessage();
+
+      const { data, error } = await client
+        .from("classes")
+        .delete()
+        .eq("id", item.id)
+        .select("id");
+
+      if (error) {
+        showMessage(
+          error.code === "23503"
+            ? "This class is linked to other records. Remove or reassign those records first."
+            : error.message
+        );
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        showMessage("Class not deleted. Check your Supabase permissions.");
+        return;
+      }
+
+      if (editingId === item.id) resetForm();
+
+      showMessage("Class deleted successfully.", "success");
+      await loadClasses();
+    }
+
+    function resetForm() {
+      form.reset();
+      editingId = null;
+      saveBtn.textContent = "Add Class";
+      cancelBtn.hidden = true;
+    }
+
+    cancelBtn.addEventListener("click", function () {
+      resetForm();
+      clearMessage();
+    });
+
+    document.getElementById("dashboardBtn").addEventListener("click", function () {
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async function () {
+      if (!window.confirm("Are you sure you want to log out?")) return;
+
+      const { error } = await client.auth.signOut();
+
+      if (error) {
+        showMessage(error.message);
+        return;
+      }
+
+      window.location.replace("index.html");
+    });
+
+    async function startPage() {
+      if (await checkLogin()) {
+        await loadClasses();
+      }
+    }
+
+    startPage();
+  </script>
+</body>
+  </html>
+  
