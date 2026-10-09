@@ -1,0 +1,180 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Management | My School System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b67;color:white;padding:18px}
+header h2{margin:0}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 8px #0001}
+input,select{width:100%;padding:11px;margin:7px 0 13px;border:1px solid #cbd5e1;border-radius:6px}
+button{padding:11px 16px;border:0;border-radius:6px;background:#1266b1;color:white;cursor:pointer;margin:3px}
+button:hover{opacity:.85}
+.back{background:#475569}
+.danger{background:#dc2626}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{padding:12px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#eaf2fb}
+#message{font-weight:bold}
+</style>
+</head>
+<body>
+<header>
+<h2>🎓 My School System — Students</h2>
+<p>Register and manage student records</p>
+</header><main>
+<button class="back" onclick="location.href='school-admin.html'">← Back to School Dashboard</button><section class="card">
+<h3>Register Student</h3>
+<form id="studentForm">
+<label>Admission Number *</label>
+<input id="admission" required placeholder="e.g. ADM001"><label>Full Name *</label>
+<input id="fullname" required placeholder="Student full name">
+
+<label>Gender</label>
+<select id="gender">
+
+<option value="">Select gender</option>
+<option>Male</option>
+<option>Female</option>
+<option>Other</option>
+</select><label>Class / Grade *</label>
+<input id="className" required placeholder="e.g. Grade 6">
+
+<label>Date of Birth</label>
+<input id="dob" type="date">
+
+<label>Parent / Guardian Name</label>
+<input id="parent" placeholder="Parent or guardian name">
+
+<label>Parent Phone</label>
+<input id="phone" type="tel" placeholder="e.g. 07XXXXXXXX">
+
+<button type="submit">Save Student</button>
+<button type="reset" class="back">Clear Form</button>
+
+</form>
+<p id="message" role="status"></p>
+</section><section class="card">
+<h3>Student Records</h3>
+<input id="search" placeholder="Search by name, admission number or class..." oninput="displayStudents()">
+<p id="count">Students: 0</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Admission No.</th>
+<th>Full Name</th>
+<th>Gender</th>
+<th>Class</th>
+<th>Parent / Guardian</th>
+<th>Phone</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="studentRows"></tbody>
+</table>
+</div>
+</section>
+</main><script>
+const STORAGE_KEY = "mySchoolStudents";
+
+function getStudents(){
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function displayStudents(){
+  const query = document.getElementById("search").value.toLowerCase();
+  const students = getStudents().filter(s =>
+    [s.admission,s.fullname,s.className].some(value =>
+      (value || "").toLowerCase().includes(query)
+    )
+  );
+
+  document.getElementById("count").textContent =
+    "Students shown: " + students.length;
+
+  const rows = document.getElementById("studentRows");
+  rows.innerHTML = "";
+
+  students.forEach(student => {
+    const tr = document.createElement("tr");
+
+    [
+      student.admission, student.fullname, student.gender,
+      student.className, student.parent, student.phone
+    ].forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value || "—";
+      tr.appendChild(td);
+    });
+
+    const actions = document.createElement("td");
+    const removeButton = document.createElement("button");
+    removeButton.textContent = "Delete";
+    removeButton.className = "danger";
+    removeButton.onclick = () => deleteStudent(student.admission);
+    actions.appendChild(removeButton);
+    tr.appendChild(actions);
+    rows.appendChild(tr);
+  });
+}
+
+document.getElementById("studentForm").addEventListener("submit", function(event){
+  event.preventDefault();
+
+  const student = {
+    admission: document.getElementById("admission").value.trim(),
+    fullname: document.getElementById("fullname").value.trim(),
+    gender: document.getElementById("gender").value,
+    className: document.getElementById("className").value.trim(),
+    dob: document.getElementById("dob").value,
+    parent: document.getElementById("parent").value.trim(),
+    phone: document.getElementById("phone").value.trim()
+  };
+
+  if(!student.admission || !student.fullname || !student.className){
+    showMessage("Please complete all required fields.", true);
+    return;
+  }
+
+  const students = getStudents();
+
+  if(students.some(s => s.admission.toLowerCase() === student.admission.toLowerCase())){
+    showMessage("That admission number already exists.", true);
+    return;
+  }
+
+  students.push(student);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+
+  this.reset();
+  showMessage("Student saved successfully on this browser.", false);
+  displayStudents();
+});
+
+function deleteStudent(admission){
+  if(!confirm("Delete this student record?")) return;
+
+  const students = getStudents().filter(s => s.admission !== admission);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+  displayStudents();
+  showMessage("Student record deleted.", false);
+}
+
+function showMessage(text, error){
+  const message = document.getElementById("message");
+  message.textContent = text;
+  message.style.color = error ? "#dc2626" : "#15803d";
+}
+
+displayStudents();
+</script></body>
+ </html>
