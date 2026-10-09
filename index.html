@@ -80,14 +80,23 @@
     <p id="welcome">Welcome</p>
     <div class="tiles">
       <div class="tile"><h3>Students</h3><p>Manage student records.</p></div>
-      <div class="tile"><h3>Teachers</h3><p>Manage teacher records.</p></div>
+      
+<div class="tile">
+  <h3>Teachers</h3>
+  <p>Register and manage teachers.</p>
+  <button type="button" id="openTeachersButton">
+    Manage Teachers
+  </button>
+</div>
+      
       <div class="tile"><h3>Classes</h3><p>Manage Grades 1–9.</p></div>
       <div class="tile"><h3>Attendance</h3><p>Track student attendance.</p></div>
       <div class="tile"><h3>Results</h3><p>Manage assessments and marks.</p></div>
       <div class="tile"><h3>Fees</h3><p>Manage fee records and payments.</p></div>
     </div>
     
-<section id="teachersSection" class="tile" style="margin-top:20px;">
+<section id="teachersSection" class="tile"
+         style="display:none; margin-top:20px;">
   <h2>Teachers Management</h2>
   <p>Register and manage school teachers.</p>
 
@@ -364,7 +373,18 @@ teacherForm.addEventListener("submit", async function(event) {
 
 document.getElementById("refreshTeachersButton")
   .addEventListener("click", loadTeachers);
-      
+
+document.getElementById("openTeachersButton")
+  .addEventListener("click", function() {
+    const section = document.getElementById("teachersSection");
+
+    section.style.display = "block";
+    section.scrollIntoView({ behavior: "smooth" });
+
+    loadTeachers();
+  });
+    
+    
   </script>
   
 <script>
