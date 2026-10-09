@@ -408,5 +408,90 @@ document.getElementById("logout").onclick = async () => {
   </div>
 </div>
   
+async function openAdminInviteForm() {
+  document.getElementById("adminInviteModal").style.display = "block";
+
+  const select = document.getElementById("adminSchool");
+  const message = document.getElementById("adminInviteMessage");
+
+  select.innerHTML = '<option value="">Loading schools...</option>';
+  message.textContent = "";
+
+  const { data, error } = await client.functions.invoke(
+    "create-school-admin-invite",
+    { body: { action: "list_schools" } }
+  );
+
+  if (error || data?.error) {
+    select.innerHTML = '<option value="">Could not load schools</option>';
+    message.textContent =
+      data?.error || error?.message || "Could not load schools.";
+    return;
+  }
+
+  select.innerHTML = '<option value="">Choose a school</option>';
+
+  for (const school of (data.schools || [])) {
+    const option = document.createElement("option");
+    option.value = school.id;
+    option.textContent =
+      school.school_name + " (" + school.school_code + ")";
+    select.appendChild(option);
+  }
+
+  if (!data.schools?.length) {
+    select.innerHTML = '<option value="">No schools registered</option>';
+  }
+}
+
+function closeAdminInviteForm() {
+  document.getElementById("adminInviteModal").style.display = "none";
+}
+
+document.getElementById("adminInviteForm").addEventListener(
+  "submit",
+  async function (event) {
+    event.preventDefault();
+
+    const button = document.getElementById("sendAdminInvite");
+    const message = document.getElementById("adminInviteMessage");
+
+    button.disabled = true;
+    message.textContent = "Sending invitation...";
+
+    try {
+      const { data, error } = await client.functions.invoke(
+        "create-school-admin-invite",
+        {
+          body: {
+            action: "invite",
+            full_name: document.getElementById("adminFullName").value.trim(),
+            email: document.getElementById("adminEmail").value.trim(),
+            school_id: document.getElementById("adminSchool").value
+          }
+        }
+      );
+
+      if (error) {
+        let details = error.message;
+        try {
+          const response = await error.context?.json();
+          if (response?.error) details = response.error;
+        } catch (_) {}
+        throw new Error(details);
+      }
+
+      if (data?.error) throw new Error(data.error);
+
+      message.textContent = data.message || "Invitation sent.";
+      this.reset();
+    } catch (err) {
+      message.textContent = "Invitation failed: " + err.message;
+    } finally {
+      button.disabled = false;
+    }
+  }
+);
+  
 </body>
 </html>
