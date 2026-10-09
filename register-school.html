@@ -3,8 +3,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>School Registration | My School</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register School | My School</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     * { box-sizing: border-box; }
 
@@ -18,19 +21,20 @@
 
     .container {
       max-width: 650px;
-      margin: 30px auto;
-      background: white;
+      margin: 20px auto;
       padding: 25px;
+      background: white;
       border-radius: 14px;
-      box-shadow: 0 5px 22px #00000012;
+      box-shadow: 0 5px 25px #00000012;
     }
 
-    h1 { color: #164e9a; margin-top: 0; }
+    h1 { color: #164e9a; }
     p { color: #64748b; line-height: 1.5; }
 
     label {
       display: block;
-      margin: 15px 0 6px;
+      margin-top: 15px;
+      margin-bottom: 6px;
       font-weight: bold;
     }
 
@@ -45,36 +49,38 @@
 
     button {
       width: 100%;
-      padding: 14px;
       margin-top: 22px;
-      border: 0;
+      padding: 14px;
+      border: none;
       border-radius: 7px;
       background: #164e9a;
       color: white;
       font-size: 16px;
       font-weight: bold;
-      cursor: pointer;
     }
 
-    button:disabled { opacity: .6; }
-    #message { margin-top: 18px; font-weight: bold; }
-    .note { font-size: 13px; }
+    button:disabled { opacity: 0.6; }
+
+    #message {
+      margin-top: 18px;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
   </style>
 </head>
+
 <body>
   <main class="container">
     <h1>Register Your School</h1>
-    <p>Submit your school's information for review by the system developer.</p>
+    <p>Enter the school details below to submit a registration request.</p>
 
     <form id="schoolForm">
-      <label for="schoolName">School Name *</label>
-      <input id="schoolName" name="schoolName"
-        placeholder="Enter the official school name"
-        required maxlength="150">
+      <label for="school_name">School Name *</label>
+      <input id="school_name" maxlength="150" required>
 
-      <label for="schoolType">School Type *</label>
-      <select id="schoolType" name="schoolType" required>
-        <option value="">Select school type</option>
+      <label for="school_type">School Type *</label>
+      <select id="school_type" required>
+        <option value="">Select type</option>
         <option>Primary School</option>
         <option>Junior School</option>
         <option>Secondary School</option>
@@ -83,58 +89,108 @@
       </select>
 
       <label for="county">County *</label>
-      <input id="county" name="county"
-        placeholder="e.g. Uasin Gishu" required maxlength="100">
+      <input id="county" maxlength="100" required>
 
       <label for="location">Town or Location *</label>
-      <input id="location" name="location"
-        placeholder="Enter town or location" required maxlength="150">
+      <input id="location" maxlength="150" required>
 
-      <label for="adminName">School Administrator's Name *</label>
-      <input id="adminName" name="adminName"
-        placeholder="Full name" required maxlength="150">
+      <label for="admin_name">Administrator Name *</label>
+      <input id="admin_name" maxlength="150" required>
 
-      <label for="email">Administrator Email *</label>
-      <input id="email" name="email" type="email"
-        placeholder="admin@example.com" required maxlength="254">
+      <label for="admin_email">Administrator Email *</label>
+      <input id="admin_email" type="email" maxlength="254" required>
 
       <label for="phone">Phone Number *</label>
-      <input id="phone" name="phone" type="tel"
-        placeholder="e.g. 07XXXXXXXX" required maxlength="30">
+      <input id="phone" type="tel" maxlength="30" required>
 
       <label for="address">School Address</label>
-      <textarea id="address" name="address" rows="3"
-        placeholder="Enter the school address" maxlength="500"></textarea>
+      <textarea id="address" rows="3" maxlength="500"></textarea>
 
       <button id="submitButton" type="submit">
-        Submit Registration
+        Submit School Registration
       </button>
 
-      <p class="note">
-        Your registration will require review. Do not submit passwords
-        or other confidential information on this form.
-      </p>
       <div id="message" role="status" aria-live="polite"></div>
     </form>
   </main>
 
   <script>
-    /*
-      This is the registration form interface only.
-      Supabase has not been connected yet.
-    */
+    const SUPABASE_URL =
+      "https://apshhzczrofxwjsgenlv.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+    const db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
 
     const form = document.getElementById("schoolForm");
+    const button = document.getElementById("submitButton");
     const message = document.getElementById("message");
 
-    form.addEventListener("submit", function(event) {
+    form.addEventListener("submit", async function(event) {
       event.preventDefault();
 
-      message.style.color = "#9a3412";
-      message.textContent =
-        "The form is working, but database submission is not connected yet. " +
-        "Complete the Supabase setup before registering a real school.";
+      button.disabled = true;
+      button.textContent = "Submitting...";
+      message.style.color = "#334155";
+      message.textContent = "Sending registration to the database...";
+
+      const schoolName =
+        document.getElementById("school_name").value.trim();
+
+      const schoolType =
+        document.getElementById("school_type").value;
+
+      const schoolData = {
+        school_name: schoolName,
+        school_code: "SCH-" +
+          Date.now().toString(36).toUpperCase() +
+          "-" + Math.random().toString(36).slice(2, 6).toUpperCase(),
+        school_type: schoolType,
+        county: document.getElementById("county").value.trim(),
+        location: document.getElementById("location").value.trim(),
+        admin_name: document.getElementById("admin_name").value.trim(),
+        admin_email: document.getElementById("admin_email").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        address: document.getElementById("address").value.trim(),
+        levels: schoolType,
+        status: "pending"
+      };
+
+      try {
+        const { data, error } = await db
+          .from("schools")
+          .insert([schoolData])
+          .select("id, school_name, school_code, status")
+          .single();
+
+        if (error) throw error;
+
+        message.style.color = "#166534";
+        message.textContent =
+          "Registration submitted successfully! " +
+          "School: " + data.school_name +
+          ". Registration code: " + data.school_code +
+          ". Status: " + (data.status || "pending") +
+          ". Keep this code for reference.";
+
+        form.reset();
+
+      } catch (error) {
+        console.error("School registration error:", error);
+
+        message.style.color = "#b91c1c";
+        message.textContent =
+          "Registration failed: " + error.message +
+          ". Please report this exact error to the developer.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Submit School Registration";
+      }
     });
   </script>
 </body>
-</html>
+        </html>
