@@ -1,0 +1,751 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Management | School System</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    header {
+      background: #123b70;
+      color: white;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .card {
+      background: white;
+      padding: 22px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      box-shadow: 0 3px 12px #0000000d;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #123b70;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    input:focus {
+      outline: 2px solid #93c5fd;
+      border-color: #2563eb;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .primary {
+      background: #1763c6;
+      color: white;
+    }
+
+    .secondary {
+      background: #475569;
+      color: white;
+    }
+
+    .danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    .success {
+      background: #15803d;
+      color: white;
+    }
+
+    .form-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 6px;
+      margin: 12px 0;
+      display: none;
+      overflow-wrap: anywhere;
+    }
+
+    .message.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .message.success-message {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .search-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 650px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+
+    th {
+      background: #eaf1fb;
+    }
+
+    td button {
+      margin: 2px;
+    }
+
+    #teacherCount {
+      color: #475569;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 15px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      .search-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Teacher Management</h1>
+
+    <div class="header-buttons">
+      <button id="dashboardBtn" class="secondary">
+        Back to Dashboard
+      </button>
+
+      <button id="logoutBtn" class="danger">
+        Log Out
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div id="pageMessage" class="message" role="status"></div>
+
+    <section class="card">
+      <h2 id="formTitle">Register New Teacher</h2>
+
+      <form id="teacherForm">
+        <div class="form-grid">
+          <div>
+            <label for="fullName">Full Name *</label>
+            <input
+              type="text"
+              id="fullName"
+              maxlength="150"
+              required
+              placeholder="Enter teacher's full name"
+            >
+          </div>
+
+          <div>
+            <label for="email">Email Address *</label>
+            <input
+              type="email"
+              id="email"
+              maxlength="254"
+              required
+              placeholder="teacher@example.com"
+            >
+          </div>
+
+          <div>
+            <label for="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              maxlength="30"
+              placeholder="Enter phone number"
+            >
+          </div>
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit" id="saveBtn" class="primary">
+            Save Teacher
+          </button>
+
+          <button
+            type="button"
+            id="cancelEditBtn"
+            class="secondary"
+            hidden
+          >
+            Cancel Edit
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Registered Teachers</h2>
+
+      <div id="teacherCount">Loading teachers...</div>
+
+      <div class="search-row">
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="Search by name, email, or phone..."
+          aria-label="Search teachers"
+        >
+
+        <button id="refreshBtn" class="primary">
+          Refresh
+        </button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="teacherTableBody">
+            <tr>
+              <td colspan="5">Loading teachers...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --------------------------------------------------
+    // 1. SUPABASE CONFIGURATION
+    // Use the same values as your working index.html.
+    // Use your Project URL and publishable/anon key.
+    // NEVER put a service_role or secret key here.
+    // --------------------------------------------------
+
+    const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+    // --------------------------------------------------
+    // 2. INITIALIZE SUPABASE
+    // --------------------------------------------------
+
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const teacherForm = document.getElementById("teacherForm");
+    const fullNameInput = document.getElementById("fullName");
+    const emailInput = document.getElementById("email");
+    const phoneInput = document.getElementById("phone");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const formTitle = document.getElementById("formTitle");
+    const tableBody = document.getElementById("teacherTableBody");
+    const teacherCount = document.getElementById("teacherCount");
+    const searchInput = document.getElementById("searchInput");
+    const pageMessage = document.getElementById("pageMessage");
+
+    let currentTeachers = [];
+    let editingTeacherId = null;
+    let currentUser = null;
+
+    // --------------------------------------------------
+    // 3. DISPLAY MESSAGES
+    // --------------------------------------------------
+
+    function showMessage(message, type = "error") {
+      pageMessage.textContent = message;
+      pageMessage.className =
+        "message " +
+        (type === "success" ? "success-message" : "error");
+
+      pageMessage.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }
+
+    function clearMessage() {
+      pageMessage.textContent = "";
+      pageMessage.className = "message";
+    }
+
+    function showDatabaseError(error) {
+      console.error("Supabase error:", error);
+
+      let message = error.message || "An unexpected error occurred.";
+
+      if (error.code === "23505") {
+        message = "This email is already registered to a teacher.";
+      } else if (
+        error.code === "42501" ||
+        error.code === "401" ||
+        error.code === "403"
+      ) {
+        message =
+          "Access denied. Check your Supabase login and table permissions/RLS policies.";
+      } else if (error.code === "23503") {
+        message =
+          "This operation was blocked by a database relationship.";
+      }
+
+      showMessage(message);
+    }
+
+    // --------------------------------------------------
+    // 4. CHECK LOGIN BEFORE OPENING THIS PAGE
+    // --------------------------------------------------
+
+    async function checkLogin() {
+      const { data, error } = await client.auth.getSession();
+
+      if (error) {
+        showMessage("Unable to check login: " + error.message);
+        return false;
+      }
+
+      if (!data.session) {
+        window.location.replace("index.html");
+        return false;
+      }
+
+      currentUser = data.session.user;
+      return true;
+    }
+
+    // --------------------------------------------------
+    // 5. LOAD TEACHERS FROM YOUR EXISTING TABLE
+    // Schema: id, full_name, email, phone, created_at
+    // --------------------------------------------------
+
+    async function loadTeachers() {
+      clearMessage();
+
+      teacherCount.textContent = "Loading teachers...";
+      tableBody.innerHTML =
+        '<tr><td colspan="5">Loading teachers...</td></tr>';
+
+      const { data, error } = await client
+        .from("teachers")
+        .select("id, full_name, email, phone, created_at")
+        .order("id", { ascending: false });
+
+      if (error) {
+        currentTeachers = [];
+        teacherCount.textContent = "Could not load teachers.";
+        tableBody.innerHTML =
+          '<tr><td colspan="5">Unable to load teacher records.</td></tr>';
+
+        showDatabaseError(error);
+        return;
+      }
+
+      currentTeachers = data || [];
+      renderTeachers();
+    }
+
+    // --------------------------------------------------
+    // 6. DISPLAY TEACHERS AND SEARCH RESULTS
+    // --------------------------------------------------
+
+    function renderTeachers() {
+      const search = searchInput.value.trim().toLowerCase();
+
+      const filtered = currentTeachers.filter(function (teacher) {
+        return (
+          (teacher.full_name || "").toLowerCase().includes(search) ||
+          (teacher.email || "").toLowerCase().includes(search) ||
+          (teacher.phone || "").toLowerCase().includes(search)
+        );
+      });
+
+      teacherCount.textContent =
+        "Total registered teachers: " + currentTeachers.length +
+        " | Displaying: " + filtered.length;
+
+      tableBody.replaceChildren();
+
+      if (filtered.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 5;
+        cell.textContent = currentTeachers.length === 0
+          ? "No teachers registered yet."
+          : "No matching teachers found.";
+
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+        return;
+      }
+
+      filtered.forEach(function (teacher, index) {
+        const row = document.createElement("tr");
+
+        function addCell(value) {
+          const cell = document.createElement("td");
+          cell.textContent = value || "—";
+          row.appendChild(cell);
+        }
+
+        addCell(String(index + 1));
+        addCell(teacher.full_name);
+        addCell(teacher.email);
+        addCell(teacher.phone);
+
+        const actionCell = document.createElement("td");
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "primary";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", function () {
+          startEdit(teacher);
+        });
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "danger";
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", function () {
+          deleteTeacher(teacher);
+        });
+
+        actionCell.append(editButton, deleteButton);
+        row.appendChild(actionCell);
+        tableBody.appendChild(row);
+      });
+    }
+
+    // --------------------------------------------------
+    // 7. REGISTER A NEW TEACHER OR UPDATE AN EXISTING ONE
+    // --------------------------------------------------
+
+    teacherForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      clearMessage();
+
+      const fullName = fullNameInput.value.trim();
+      const email = emailInput.value.trim();
+      const phone = phoneInput.value.trim();
+
+      if (!fullName || !email) {
+        showMessage("Please enter the teacher's name and email.");
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = editingTeacherId
+        ? "Updating..."
+        : "Saving...";
+
+      try {
+        const teacherData = {
+          full_name: fullName,
+          email: email,
+          phone: phone || null
+        };
+
+        let result;
+
+        if (editingTeacherId !== null) {
+          result = await client
+            .from("teachers")
+            .update(teacherData)
+            .eq("id", editingTeacherId)
+            .select("id");
+        } else {
+          result = await client
+            .from("teachers")
+            .insert([teacherData])
+            .select("id");
+        }
+
+        if (result.error) {
+          showDatabaseError(result.error);
+          return;
+        }
+
+        if (!result.data || result.data.length === 0) {
+          showMessage(
+            "No record was changed. Check your Supabase permissions."
+          );
+          return;
+        }
+
+        const wasEditing = editingTeacherId !== null;
+
+        resetForm();
+
+        showMessage(
+          wasEditing
+            ? "Teacher updated successfully."
+            : "Teacher registered successfully.",
+          "success"
+        );
+
+        await loadTeachers();
+
+      } catch (error) {
+        showDatabaseError(error);
+      } finally {
+        saveBtn.disabled = false;
+
+        if (editingTeacherId === null) {
+          saveBtn.textContent = "Save Teacher";
+        }
+      }
+    });
+
+    // --------------------------------------------------
+    // 8. START EDITING A TEACHER
+    // --------------------------------------------------
+
+    function startEdit(teacher) {
+      clearMessage();
+
+      editingTeacherId = teacher.id;
+
+      fullNameInput.value = teacher.full_name || "";
+      emailInput.value = teacher.email || "";
+      phoneInput.value = teacher.phone || "";
+
+      formTitle.textContent = "Edit Teacher";
+      saveBtn.textContent = "Update Teacher";
+      cancelEditBtn.hidden = false;
+
+      teacherForm.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+      fullNameInput.focus();
+    }
+
+    // --------------------------------------------------
+    // 9. CANCEL EDITING
+    // --------------------------------------------------
+
+    function resetForm() {
+      teacherForm.reset();
+      editingTeacherId = null;
+
+      formTitle.textContent = "Register New Teacher";
+      saveBtn.textContent = "Save Teacher";
+      cancelEditBtn.hidden = true;
+    }
+
+    cancelEditBtn.addEventListener("click", function () {
+      resetForm();
+      clearMessage();
+    });
+
+    // --------------------------------------------------
+    // 10. DELETE A TEACHER
+    // --------------------------------------------------
+
+    async function deleteTeacher(teacher) {
+      const confirmed = window.confirm(
+        "Delete teacher " + teacher.full_name + "?\n\n" +
+        "This action cannot easily be undone."
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      clearMessage();
+
+      try {
+        const { data, error } = await client
+          .from("teachers")
+          .delete()
+          .eq("id", teacher.id)
+          .select("id");
+
+        if (error) {
+          showDatabaseError(error);
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          showMessage(
+            "Teacher was not deleted. Check your Supabase permissions."
+          );
+          return;
+        }
+
+        if (editingTeacherId === teacher.id) {
+          resetForm();
+        }
+
+        showMessage("Teacher deleted successfully.", "success");
+        await loadTeachers();
+
+      } catch (error) {
+        showDatabaseError(error);
+      }
+    }
+
+    // --------------------------------------------------
+    // 11. SEARCH AND REFRESH
+    // --------------------------------------------------
+
+    searchInput.addEventListener("input", renderTeachers);
+
+    document.getElementById("refreshBtn").addEventListener(
+      "click",
+      loadTeachers
+    );
+
+    // --------------------------------------------------
+    // 12. NAVIGATION
+    // --------------------------------------------------
+
+    document.getElementById("dashboardBtn").addEventListener(
+      "click",
+      function () {
+        window.location.href = "index.html";
+      }
+    );
+
+    document.getElementById("logoutBtn").addEventListener(
+      "click",
+      async function () {
+        const confirmed = window.confirm("Are you sure you want to log out?");
+
+        if (!confirmed) {
+          return;
+        }
+
+        const { error } = await client.auth.signOut();
+
+        if (error) {
+          showDatabaseError(error);
+          return;
+        }
+
+        window.location.replace("index.html");
+      }
+    );
+
+    // --------------------------------------------------
+    // 13. START THE PAGE
+    // --------------------------------------------------
+
+    async function startPage() {
+      const loggedIn = await checkLogin();
+
+      if (loggedIn) {
+        await loadTeachers();
+      }
+    }
+
+    startPage();
+  </script>
+</body>
+        </html>
+                            
