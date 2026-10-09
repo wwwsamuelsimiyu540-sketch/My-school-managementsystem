@@ -1,221 +1,451 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Developer Dashboard | My School</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My School System | Developer Dashboard</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f1f5f9;
-      color: #172033;
-    }
-
-    header {
-      background: #123b70;
-      color: white;
-      padding: 22px;
-    }
-
-    header h1 { margin: 0 0 8px; }
-
-    main { max-width: 1100px; margin: auto; padding: 20px; }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 14px;
-      margin-bottom: 22px;
-    }
-
-    .card, .panel {
-      background: white;
-      padding: 18px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px #0000000c;
-    }
-
-    .number { font-size: 28px; font-weight: bold; margin-top: 8px; }
-
-    .panel { overflow-x: auto; }
-
-    button {
-      padding: 10px 13px;
-      border: 0;
-      border-radius: 6px;
-      cursor: pointer;
-      margin: 3px;
-      color: white;
-      background: #164e9a;
-    }
-
-    button:disabled { opacity: .5; cursor: not-allowed; }
-
-    .refresh { background: #475569; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 700px;
-    }
-
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #e2e8f0;
-      text-align: left;
-    }
-
-    th { background: #f8fafc; }
-
-    #message { margin: 15px 0; overflow-wrap: anywhere; }
-
-    .note {
-      margin-top: 18px;
-      padding: 14px;
-      background: #fff7ed;
-      border-radius: 8px;
-      line-height: 1.5;
-    }
-  </style>
+<style>
+:root {
+  --navy:#102746;
+  --blue:#1769e0;
+  --bg:#f3f6fb;
+  --white:#fff;
+  --text:#24334b;
+  --muted:#718096;
+  --border:#e1e8f0;
+  --green:#16845b;
+  --red:#c0392b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:255px;background:var(--navy);color:white;padding:22px 14px;flex-shrink:0}
+.brand{font-size:20px;font-weight:bold;padding:8px 10px 22px;border-bottom:1px solid #ffffff25}
+.brand small{display:block;font-size:11px;color:#b9c9e2;margin-top:6px;font-weight:normal}
+.nav-title{font-size:11px;text-transform:uppercase;color:#a9bad2;padding:20px 10px 8px}
+.nav-button{width:100%;border:0;background:transparent;color:#dce7f6;text-align:left;padding:11px 12px;border-radius:7px;margin:2px 0;cursor:pointer;font-size:13px}
+.nav-button:hover,.nav-button.active{background:#245080;color:white}
+.main{flex:1;min-width:0}
+.topbar{background:white;padding:18px 25px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.topbar h1{font-size:21px;margin:0}
+.user-info{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.content{padding:25px;max-width:1500px;margin:auto}
+.welcome{background:linear-gradient(120deg,#123b70,#1769e0);color:white;border-radius:13px;padding:25px;margin-bottom:22px}
+.welcome h2{margin:0 0 8px}
+.welcome p{margin:0;color:#e2edff;line-height:1.5}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:24px}
+.card,.panel{background:white;border:1px solid var(--border);border-radius:11px;padding:19px}
+.card .label{font-size:12px;color:var(--muted)}
+.card .number{font-size:29px;font-weight:bold;margin:12px 0 5px}
+.card .note{font-size:11px;color:var(--muted)}
+.panel{margin-bottom:20px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+.panel h2{font-size:17px;margin:0}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+input,select{padding:10px;border:1px solid #cbd5e1;border-radius:7px;font:inherit;max-width:100%}
+button.action{border:0;border-radius:7px;padding:10px 13px;background:var(--blue);color:white;cursor:pointer}
+button.secondary{background:#e9eff8;color:var(--navy)}
+button.danger{background:var(--red);color:white}
+button:disabled{opacity:.55;cursor:wait}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{padding:12px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:13px}
+th{background:#f8fafc;color:#526177}
+.badge{display:inline-block;padding:5px 8px;border-radius:20px;background:#fff1d5;color:#815600;font-size:11px}
+.badge.approved{background:#dff7eb;color:#126744}
+.badge.rejected,.badge.suspended{background:#ffe5e2;color:#9c2e25}
+.modules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.module{border:1px solid var(--border);background:white;border-radius:10px;padding:15px;text-align:left;cursor:pointer;color:var(--text)}
+.module:hover{border-color:var(--blue);background:#f8fbff}
+.module .icon{font-size:22px;display:block;margin-bottom:9px}
+.module strong{font-size:13px;display:block}
+.module small{color:var(--muted);display:block;margin-top:6px;line-height:1.4}
+#message{padding:12px;border-radius:8px;margin-bottom:15px;display:none;overflow-wrap:anywhere}
+#message.error{display:block;background:#ffebe9;color:#9c2e25}
+#message.success{display:block;background:#e2f8ed;color:#126744}
+#message.info{display:block;background:#e8f1ff;color:#174a91}
+.hidden{display:none!important}
+.muted{color:var(--muted);font-size:13px;line-height:1.6}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.modules{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){
+ .layout{display:block}.sidebar{width:100%;padding:14px}
+ .brand{padding-bottom:12px}.nav-title{padding-top:12px}
+ .nav-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+ .nav-button{font-size:12px;padding:10px 7px}
+ .topbar{padding:15px}.content{padding:14px}
+ .cards{gap:9px}.card{padding:13px}.card .number{font-size:24px}
+ .modules{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .welcome{padding:19px}
+}
+</style>
 </head>
-
 <body>
-  <header>
-    <h1>Developer Dashboard</h1>
-    <div>School Management System</div>
-  </header>
 
-  <main>
-    <div class="stats">
-      <div class="card">
-        Total schools
-        <div class="number" id="total">—</div>
-      </div>
-      <div class="card">
-        Pending
-        <div class="number" id="pending">—</div>
-      </div>
-      <div class="card">
-        Approved
-        <div class="number" id="approved">—</div>
-      </div>
-      <div class="card">
-        Rejected
-        <div class="number" id="rejected">—</div>
-      </div>
+<div id="loading" style="padding:35px">Checking developer access...</div>
+
+<div id="app" class="layout hidden">
+  <aside class="sidebar">
+    <div class="brand">
+      🎓 My School System
+      <small>PLATFORM CONTROL CENTRE</small>
     </div>
 
-    <section class="panel">
-      <h2>Registered Schools</h2>
-      <button class="refresh" id="refreshButton">Refresh List</button>
+    <div class="nav-title">Main Menu</div>
+    <div class="nav-list">
+      <button class="nav-button active" data-page="overview">🏠 Overview</button>
+      <button class="nav-button" data-page="schools">🏫 School Management</button>
+      <button class="nav-button" data-page="users">👥 User Management</button>
+      <button class="nav-button" data-page="academics">📚 Academic Overview</button>
+      <button class="nav-button" data-page="finance">💰 Finance Overview</button>
+      <button class="nav-button" data-page="attendance">🗓 Attendance</button>
+      <button class="nav-button" data-page="reports">📊 Reports</button>
+      <button class="nav-button" data-page="subscriptions">💳 Subscriptions</button>
+      <button class="nav-button" data-page="announcements">📢 Announcements</button>
+      <button class="nav-button" data-page="support">🛟 Support Centre</button>
+      <button class="nav-button" data-page="audit">🛡 Audit & Security</button>
+      <button class="nav-button" data-page="settings">⚙️ Platform Settings</button>
+      <button class="nav-button" data-page="profile">👤 Developer Profile</button>
+    </div>
 
-      <div id="message" role="status" aria-live="polite">
-        Loading registrations...
-      </div>
+    <div class="nav-title">Account</div>
+    <button id="logout" class="nav-button">🚪 Sign Out</button>
+  </aside>
 
-      <table>
-        <thead>
-          <tr>
-            <th>School</th>
-            <th>Code</th>
-            <th>County</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody id="schoolRows"></tbody>
-      </table>
+  <main class="main">
+    <header class="topbar">
+      <h1 id="pageTitle">Developer Overview</h1>
+      <div class="user-info" id="developerEmail"></div>
+    </header>
 
-      <div class="note">
-        <strong>Security:</strong> This dashboard is not yet protected by
-        developer login. Do not grant public read or update access to your
-        schools table to make this page work. We will configure secure
-        developer authentication and approval permissions next.
-      </div>
-    </section>
+    <div class="content">
+      <div id="message" role="status" aria-live="polite"></div>
+
+      <section id="page-overview" class="page">
+        <div class="welcome">
+          <h2>Welcome to your Developer Dashboard</h2>
+          <p>Manage schools, monitor platform activity, and oversee your school management system from one place.</p>
+        </div>
+
+        <div class="cards">
+          <div class="card"><div class="label">Total Schools</div><div class="number" id="totalSchools">—</div><div class="note">Registered schools</div></div>
+          <div class="card"><div class="label">Pending Approvals</div><div class="number" id="pendingSchools">—</div><div class="note">Awaiting review</div></div>
+          <div class="card"><div class="label">Approved Schools</div><div class="number" id="approvedSchools">—</div><div class="note">Approved institutions</div></div>
+          <div class="card"><div class="label">Suspended Schools</div><div class="number" id="suspendedSchools">—</div><div class="note">Suspended institutions</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Recent School Registrations</h2>
+            <button class="action" data-go="schools">View All Schools</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>School</th><th>Registration No.</th><th>County</th><th>Status</th></tr></thead>
+              <tbody id="recentSchools"><tr><td colspan="4">Loading schools...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Quick Access</h2></div>
+          <div class="modules" id="quickModules"></div>
+        </div>
+      </section>
+
+      <section id="page-schools" class="page hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>School Directory</h2>
+            <button class="action" id="refreshSchools">↻ Refresh</button>
+          </div>
+          <div class="toolbar" style="margin-bottom:15px">
+            <input id="schoolSearch" placeholder="Search school name, number or county">
+            <select id="schoolFilter">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>School</th><th>Registration No.</th><th>County</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="schoolsTable"><tr><td colspan="5">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="muted">School approval actions require an authorized database policy. If an action fails, the dashboard will show the error.</p>
+      </section>
+
+      <section id="page-users" class="page hidden">
+        <div class="panel">
+          <h2>User Management</h2>
+          <p class="muted">View user profiles and their roles. Authentication account creation and role changes will be added through secure administrative workflows.</p>
+          <button class="action" id="loadUsers">Load User Profiles</button>
+          <div class="table-wrap" style="margin-top:15px">
+            <table><thead><tr><th>Name</th><th>Role</th><th>School ID</th></tr></thead><tbody id="usersTable"><tr><td colspan="3">Select Load User Profiles.</td></tr></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-academics" class="page hidden">
+        <div class="cards">
+          <div class="card"><div class="label">Classes</div><div class="number" id="classesCount">—</div></div>
+          <div class="card"><div class="label">Students</div><div class="number" id="studentsCount">—</div></div>
+          <div class="card"><div class="label">Teachers</div><div class="number" id="teachersCount">—</div></div>
+          <div class="card"><div class="label">Subjects</div><div class="number" id="subjectsCount">—</div></div>
+        </div>
+        <div class="panel"><h2>Academic Overview</h2><p class="muted">Counts are based on records visible to your current database permissions.</p></div>
+      </section>
+
+      <section id="page-finance" class="page hidden">
+        <div class="cards">
+          <div class="card"><div class="label">Fee Structures</div><div class="number" id="feesCount">—</div></div>
+          <div class="card"><div class="label">Payment Records</div><div class="number" id="paymentsCount">—</div></div>
+        </div>
+        <div class="panel"><h2>Finance Overview</h2><p class="muted">Financial totals will be implemented after the payment and reporting rules are configured.</p></div>
+      </section>
+
+      <section id="page-attendance" class="page hidden">
+        <div class="panel"><h2>Attendance Overview</h2><p class="muted">Attendance records visible to your current database permissions:</p><div class="number" id="attendanceCount">—</div></div>
+      </section>
+
+      <section id="page-reports" class="page hidden">
+        <div class="panel"><h2>Platform Reports</h2><p class="muted">Generate a current summary of school registrations and available academic records.</p><button class="action" id="generateReport">Generate Summary</button><pre id="reportOutput" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div>
+      </section>
+
+      <section id="page-subscriptions" class="page hidden">
+        <div class="panel"><h2>Subscription Management</h2><p class="muted">This module is planned. Subscription plans, billing records, and payment integration require additional database tables and business rules.</p></div>
+      </section>
+
+      <section id="page-announcements" class="page hidden">
+        <div class="panel"><h2>Platform Announcements</h2><p class="muted">Announcement publishing will be enabled after the announcement database and recipient permissions are created.</p></div>
+      </section>
+
+      <section id="page-support" class="page hidden">
+        <div class="panel"><h2>Support Centre</h2><p class="muted">Support tickets and responses will be added in a later development step.</p></div>
+      </section>
+
+      <section id="page-audit" class="page hidden">
+        <div class="panel"><h2>Audit & Security</h2><p class="muted">Security policies are enabled, but a dedicated audit-log system and security-event tracking still need to be implemented.</p></div>
+      </section>
+
+      <section id="page-settings" class="page hidden">
+        <div class="panel"><h2>Platform Settings</h2><p class="muted">Platform-wide configuration will be stored in a dedicated, secured settings table in a later step.</p></div>
+      </section>
+
+      <section id="page-profile" class="page hidden">
+        <div class="panel"><h2>Developer Profile</h2><p id="profileDetails" class="muted">Loading profile...</p></div>
+      </section>
+
+      <footer>My School System · Platform Developer Console</footer>
+    </div>
   </main>
+</div>
 
-  <script>
-    const SUPABASE_URL =
-      "https://apshhzczrofxwjsgenlv.supabase.co";
+<script>
+/* Replace both placeholders with your Supabase project details. */
+const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
 
-    const SUPABASE_KEY =
-      "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+const client = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
 
-    const db = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+let currentUser = null;
+let currentProfile = null;
+let schoolsCache = [];
 
-    const message = document.getElementById("message");
-    const rows = document.getElementById("schoolRows");
+const $ = id => document.getElementById(id);
 
-    function addCell(tr, value) {
-      const td = document.createElement("td");
-      td.textContent = value == null ? "" : String(value);
-      tr.appendChild(td);
+function showMessage(text, type = "info") {
+  const box = $("message");
+  box.textContent = text;
+  box.className = type;
+  box.style.display = "block";
+}
+
+function hideMessage() {
+  $("message").style.display = "none";
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+async function countRows(table) {
+  const { count, error } = await client
+    .from(table)
+    .select("*", { count: "exact", head: true });
+  if (error) throw error;
+  return count ?? 0;
+}
+
+function statusBadge(status) {
+  const safe = escapeHTML(status || "unknown");
+  return `<span class="badge ${safe}">${safe}</span>`;
+}
+
+async function initialize() {
+  try {
+    if (SUPABASE_URL.includes("YOUR_") ||
+        SUPABASE_PUBLISHABLE_KEY.includes("YOUR_")) {
+      throw new Error("Add your Supabase URL and publishable key to this file first.");
     }
 
-    async function loadSchools() {
-      message.textContent = "Loading schools...";
-      rows.replaceChildren();
+    const { data: sessionData, error: sessionError } =
+      await client.auth.getSession();
 
-      const { data, error } = await db
-        .from("schools")
-        .select("id, school_name, school_code, county, status, created_at")
-        .order("created_at", { ascending: false });
+    if (sessionError) throw sessionError;
 
-      if (error) {
-        message.textContent =
-          "Could not load schools: " + error.message +
-          ". Developer login and secure read permissions may need setup.";
-        ["total", "pending", "approved", "rejected"].forEach(id => {
-          document.getElementById(id).textContent = "—";
-        });
-        return;
-      }
-
-      const schools = data || [];
-
-      document.getElementById("total").textContent = schools.length;
-      document.getElementById("pending").textContent =
-        schools.filter(s => (s.status || "pending") === "pending").length;
-      document.getElementById("approved").textContent =
-        schools.filter(s => s.status === "approved").length;
-      document.getElementById("rejected").textContent =
-        schools.filter(s => s.status === "rejected").length;
-
-      if (schools.length === 0) {
-        message.textContent = "No school records were returned.";
-        return;
-      }
-
-      message.textContent = "School records loaded.";
-      schools.forEach(school => {
-        const tr = document.createElement("tr");
-        addCell(tr, school.school_name);
-        addCell(tr, school.school_code);
-        addCell(tr, school.county);
-        addCell(tr, school.status || "pending");
-        addCell(tr, school.created_at
-          ? new Date(school.created_at).toLocaleDateString()
-          : "");
-        rows.appendChild(tr);
-      });
+    if (!sessionData.session) {
+      window.location.replace("login.html");
+      return;
     }
 
-    document.getElementById("refreshButton").addEventListener(
-      "click", loadSchools
-    );
+    currentUser = sessionData.session.user;
 
-    loadSchools();
-  </script>
-</body>
-</html>
+    const { data: profile, error: profileError } = await client
+      .from("user_profiles")
+      .select("full_name, role, school_id")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (profileError) throw profileError;
+
+    if (!profile || profile.role !== "platform_developer") {
+      await client.auth.signOut();
+      throw new Error("Access denied. A Platform Developer account is required.");
+    }
+
+    currentProfile = profile;
+    $("developerEmail").textContent = currentUser.email || "";
+    $("profileDetails").textContent =
+      `Name: ${profile.full_name || "Platform Developer"} | Role: ${profile.role} | Account: ${currentUser.email || currentUser.id}`;
+
+    $("loading").classList.add("hidden");
+    $("app").classList.remove("hidden");
+
+    buildQuickModules();
+    await loadDashboard();
+    setupNavigation();
+  } catch (error) {
+    $("loading").textContent = "Unable to open dashboard: " + error.message;
+  }
+}
+
+async function loadDashboard() {
+  hideMessage();
+  try {
+    const results = await Promise.all([
+      countRows("schools"),
+      client.from("schools").select("status"),
+      countRows("classes"),
+      countRows("students"),
+      countRows("teachers"),
+      countRows("subjects"),
+      countRows("fees"),
+      countRows("payments"),
+      countRows("attendance")
+    ]);
+
+    if (results[1].error) throw results[1].error;
+
+    const schoolRows = results[1].data || [];
+    $("totalSchools").textContent = results[0];
+    $("pendingSchools").textContent = schoolRows.filter(x => x.status === "pending").length;
+    $("approvedSchools").textContent = schoolRows.filter(x => x.status === "approved").length;
+    $("suspendedSchools").textContent = schoolRows.filter(x => x.status === "suspended").length;
+
+    $("classesCount").textContent = results[2];
+    $("studentsCount").textContent = results[3];
+    $("teachersCount").textContent = results[4];
+    $("subjectsCount").textContent = results[5];
+    $("feesCount").textContent = results[6];
+    $("paymentsCount").textContent = results[7];
+    $("attendanceCount").textContent = results[8];
+
+    await loadSchools();
+  } catch (error) {
+    showMessage("Some data could not be loaded: " + error.message, "error");
+  }
+}
+
+async function loadSchools() {
+  const body = $("schoolsTable");
+  body.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+
+  const { data, error } = await client
+    .from("schools")
+    .select("id, school_name, registration_number, county, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  if (error) {
+    body.innerHTML = '<tr><td colspan="5">Unable to load schools.</td></tr>';
+    showMessage("Could not load schools: " + error.message, "error");
+    $("recentSchools").innerHTML = '<tr><td colspan="4">Unable to load.</td></tr>';
+    return;
+  }
+
+  schoolsCache = data || [];
+  renderSchools();
+  renderRecentSchools();
+}
+
+function renderSchools() {
+  const search = $("schoolSearch").value.toLowerCase().trim();
+  const filter = $("schoolFilter").value;
+
+  const filtered = schoolsCache.filter(school => {
+    const matchesSearch = [
+      school.school_name, school.registration_number, school.county
+    ].some(value => String(value || "").toLowerCase().includes(search));
+    return matchesSearch && (!filter || school.status === filter);
+  });
+
+  $("schoolsTable").innerHTML = filtered.length
+    ? filtered.map(school => `
+      <tr>
+        <td>${escapeHTML(school.school_name)}</td>
+        <td>${escapeHTML(school.registration_number || "—")}</td>
+        <td>${escapeHTML(school.county || "—")}</td>
+        <td>${statusBadge(school.status)}</td>
+        <td>
+          ${school.status !== "approved"
+            ? `<button class="action" data-school-action="approved" data-id="${escapeHTML(school.id)}">Approve</button> `
+            : ""}
+          ${school.status !== "suspended"
+            ? `<button class="action danger" data-school-action="suspended" data-id="${escapeHTML(school.id)}">Suspend</button>`
+            : `<button class="action secondary" data-school-action="approved" data-id="${escapeHTML(school.id)}">Reactivate</button>`}
+        </td>
+      </tr>`).join("")
+    : '<tr><td colspan="5">No matching schools found.</td></tr>';
+}
+
+function renderRecentSchools() {
+  const recent = schoolsCache.slice(0, 5);
+  $("recentSchools").innerHTML = recent.length
+    ? recent.map(school => `
+      <tr>
+        <td>${escapeHTML(school.school_name)}</td>
+        <td>${escapeHTML(school.registration_number || "—")}</td>
+        <td>${escapeHTML(school.county || "—")}</td>
+        <td>${statusBadge(school.status)}</td>
+      </tr>`).join("")
+    : '<tr><td colspan="4">No schools registered yet.</td></tr>';
+}
+
+async function changeSchoolStatus(id, status) {
+  const school = schoolsCache.find(item => item.id === id);
+  if (!school) return;
+
+  if (!confirm(`Change "${school.scho
