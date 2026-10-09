@@ -449,3 +449,235 @@ async function changeSchoolStatus(id, status) {
   if (!school) return;
 
   if (!confirm(`Change "${school.scho
+                            if (!["approved", "suspended", "rejected"].includes(status)) {
+    showMessage("Invalid school status.", "error");
+    return;
+  }
+
+  const actionText = status === "approved"
+    ? "approve"
+    : status === "suspended"
+      ? "suspend"
+      : "reject";
+
+  if (!confirm(`Are you sure you want to ${actionText} ${school.school_name}?`)) {
+    return;
+  }
+
+  const { error } = await client
+    .from("schools")
+    .update({ status: status })
+    .eq("id", id);
+
+  if (error) {
+    showMessage("Could not update school status: " + error.message, "error");
+    return;
+  }
+
+  showMessage(
+    `${school.school_name} status changed to ${status}.`,
+    "success"
+  );
+
+  await loadDashboard();
+}
+
+function setupNavigation() {
+  document.querySelectorAll(".nav-button[data-page]").forEach(button => {
+    button.addEventListener("click", () => {
+      openPage(button.dataset.page);
+    });
+  });
+
+  document.querySelectorAll("[data-go]").forEach(button => {
+    button.addEventListener("click", () => {
+      openPage(button.dataset.go);
+    });
+  });
+
+  $("refreshSchools").addEventListener("click", loadSchools);
+
+  $("schoolSearch").addEventListener("input", renderSchools);
+
+  $("schoolFilter").addEventListener("change", renderSchools);
+
+  $("schoolsTable").addEventListener("click", async event => {
+    const button = event.target.closest("[data-school-action]");
+    if (!button) return;
+
+    button.disabled = true;
+
+    try {
+      await changeSchoolStatus(
+        button.dataset.id,
+        button.dataset.schoolAction
+      );
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $("loadUsers").addEventListener("click", loadUsers);
+
+  $("generateReport").addEventListener("click", generateReport);
+
+  $("logout").addEventListener("click", async () => {
+    const { error } = await client.auth.signOut();
+
+    if (error) {
+      showMessage("Sign-out failed: " + error.message, "error");
+      return;
+    }
+
+    window.location.replace("login.html");
+  });
+}
+
+function openPage(page) {
+  const titles = {
+    overview: "Developer Overview",
+    schools: "School Management",
+    users: "User Management",
+    academics: "Academic Overview",
+    finance: "Finance Overview",
+    attendance: "Attendance Overview",
+    reports: "Platform Reports",
+    subscriptions: "Subscription Management",
+    announcements: "Platform Announcements",
+    support: "Support Centre",
+    audit: "Audit & Security",
+    settings: "Platform Settings",
+    profile: "Developer Profile"
+  };
+
+  const target = $("page-" + page);
+
+  if (!target) {
+    showMessage("This page does not exist.", "error");
+    return;
+  }
+
+  document.querySelectorAll(".page").forEach(section => {
+    section.classList.add("hidden");
+  });
+
+  target.classList.remove("hidden");
+
+  document.querySelectorAll(".nav-button[data-page]").forEach(button => {
+    button.classList.toggle("active", button.dataset.page === page);
+  });
+
+  $("pageTitle").textContent = titles[page] || "Developer Dashboard";
+
+  hideMessage();
+}
+
+async function loadUsers() {
+  const body = $("usersTable");
+  body.innerHTML = '<tr><td colspan="3">Loading users...</td></tr>';
+
+  const { data, error } = await client
+    .from("user_profiles")
+    .select("full_name, role, school_id")
+    .order("full_name")
+    .limit(500);
+
+  if (error) {
+    body.innerHTML =
+      '<tr><td colspan="3">Could not load user profiles.</td></tr>';
+
+    showMessage(
+      "User profiles could not be loaded: " + error.message,
+      "error"
+    );
+    return;
+  }
+
+  body.innerHTML = data.length
+    ? data.map(user => `
+        <tr>
+          <td>${escapeHTML(user.full_name || "Unnamed user")}</td>
+          <td>${escapeHTML(user.role || "No role")}</td>
+          <td>${escapeHTML(user.school_id || "—")}</td>
+        </tr>
+      `).join("")
+    : '<tr><td colspan="3">No user profiles found.</td></tr>';
+
+  showMessage("User profiles loaded successfully.", "success");
+}
+
+async function generateReport() {
+  const output = $("reportOutput");
+
+  output.textContent = "Generating report...";
+
+  try {
+    const [total, schoolResult, students, teachers, classes] =
+      await Promise.all([
+        countRows("schools"),
+        client.from("schools").select("status"),
+        countRows("students"),
+        countRows("teachers"),
+        countRows("classes")
+      ]);
+
+    if (schoolResult.error) throw schoolResult.error;
+
+    const schoolRows = schoolResult.data || [];
+
+    output.textContent = [
+      "SCHOOL MANAGEMENT SYSTEM REPORT",
+      "Generated: " + new Date().toLocaleString(),
+      "",
+      "Total schools: " + total,
+      "Pending schools: " +
+        schoolRows.filter(s => s.status === "pending").length,
+      "Approved schools: " +
+        schoolRows.filter(s => s.status === "approved").length,
+      "Rejected schools: " +
+        schoolRows.filter(s => s.status === "rejected").length,
+      "Suspended schools: " +
+        schoolRows.filter(s => s.status === "suspended").length,
+      "",
+      "Students: " + students,
+      "Teachers: " + teachers,
+      "Classes: " + classes
+    ].join("\n");
+
+    showMessage("Report generated successfully.", "success");
+  } catch (error) {
+    output.textContent = "Report failed: " + error.message;
+    showMessage("Could not generate report.", "error");
+  }
+}
+
+function buildQuickModules() {
+  const modules = [
+    ["🏫", "School Management", "Review registrations", "schools"],
+    ["👥", "User Management", "View user profiles", "users"],
+    ["📚", "Academics", "Monitor academic records", "academics"],
+    ["💰", "Finance", "View fees and payments", "finance"],
+    ["🗓", "Attendance", "Monitor attendance records", "attendance"],
+    ["📊", "Reports", "Generate platform reports", "reports"],
+    ["💳", "Subscriptions", "Manage subscription plans", "subscriptions"],
+    ["📢", "Announcements", "Platform communications", "announcements"],
+    ["🛟", "Support Centre", "Support services", "support"],
+    ["🛡", "Audit & Security", "Security monitoring", "audit"],
+    ["⚙️", "Platform Settings", "System configuration", "settings"],
+    ["👤", "Developer Profile", "View your profile", "profile"]
+  ];
+
+  $("quickModules").innerHTML = modules.map(item => `
+    <button class="module" data-go="${item[3]}">
+      <span class="icon">${item[0]}</span>
+      <strong>${item[1]}</strong>
+      <small>${item[2]}</small>
+    </button>
+  `).join("");
+
+  $("quickModules").querySelectorAll("[data-go]").forEach(button => {
+    button.addEventListener("click", () => openPage(button.dataset.go));
+  });
+}
+
+initialize();
