@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Administrator | My School System</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#102442;color:white;padding:20px}
+header h2{margin:0}
+.layout{display:flex;min-height:100vh}
+aside{width:230px;background:#172b4d;padding:15px;flex-shrink:0}
+aside a{display:block;color:white;text-decoration:none;padding:12px;margin-bottom:5px;border-radius:6px}
+aside a:hover{background:#2563eb}
+main{padding:22px;flex:1;min-width:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px}
+.card,.panel{background:white;padding:20px;border-radius:10px;margin-bottom:18px;box-shadow:0 2px 8px #0001}
+.card h3{font-size:14px;color:#64748b}
+.card strong{font-size:26px}
+.modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
+.module{background:white;padding:20px;border-radius:9px;border:1px solid #e2e8f0}
+.module button{background:#2563eb;color:white;border:0;padding:10px;border-radius:5px;cursor:pointer}
+.notice{background:#dbeafe;padding:12px;border-radius:6px}
+@media(max-width:700px){
+.layout{display:block}
+aside{width:100%}
+main{padding:12px}
+}
+</style></head><body><header>
+<h2>MY SCHOOL SYSTEM</h2>
+<p>School Administration Portal</p>
+</header><div class="layout"><aside>
+<a href="school-admin.html">Dashboard</a>
+<a href="students.html">Students</a>
+<a href="teachers.html">Teachers & Staff</a>
+<a href="academics.html">Academics</a>
+<a href="attendance.html">Attendance</a>
+<a href="finance.html">Fees & Payments</a>
+<a href="parents.html">Parents Portal</a>
+<a href="reports.html">Reports</a>
+<a href="settings.html">School Settings</a>
+<a href="index.html">Exit Dashboard</a>
+</aside><main><h1>School Administrator Dashboard</h1>
+<p>Manage your school's daily activities from one place.</p><div class="cards">
+<div class="card">
+<h3>Total Students</h3>
+<strong>—</strong>
+</div><div class="card">
+<h3>Total Teachers</h3>
+<strong>—</strong>
+</div><div class="card">
+<h3>Fees Collected</h3>
+<strong>—</strong>
+</div><div class="card">
+<h3>Attendance Today</h3>
+<strong>—</strong>
+</div>
+</div><div class="panel">
+<h2>School Management Modules</h2><div class="modules"><div class="module">
+<h3>Student Management</h3>
+<p>Admissions, student profiles and class allocation.</p>
+<button onclick="openPage('students.html')">Open</button>
+</div><div class="module">
+<h3>Teachers & Staff</h3>
+<p>Manage staff profiles and assignments.</p>
+<button onclick="openPage('teachers.html')">Open</button>
+</div><div class="module">
+<h3>Academics</h3>
+<p>Classes, subjects, examinations and results.</p>
+<button onclick="openPage('academics.html')">Open</button>
+</div><div class="module">
+<h3>Attendance</h3>
+<p>Record and review student attendance.</p>
+<button onclick="openPage('attendance.html')">Open</button>
+</div><div class="module">
+<h3>Fees & Payments</h3>
+<p>Manage fee structures, balances and payments.</p>
+<button onclick="openPage('finance.html')">Open</button>
+</div><div class="module">
+<h3>Parents Portal</h3>
+<p>Provide parents with access to learner updates.</p>
+<button onclick="openPage('parents.html')">Open</button>
+</div><div class="module">
+<h3>Reports</h3>
+<p>Review school performance and administrative reports.</p>
+<button onclick="openPage('reports.html')">Open</button>
+</div><div class="module">
+<h3>School Settings</h3>
+<p>Configure school information and academic year.</p>
+<button onclick="openPage('settings.html')">Open</button>
+</div></div>
+</div><div class="panel">
+<h2>System Notice</h2>
+<p class="notice">
+This dashboard is a frontend prototype. Supabase authentication,
+school-specific permissions and database records must be configured
+before using real school data.
+</p>
+</div></main>
+</div><script>
+function openPage(page){
+window.location.href=page;
+}
+</script></body>
+</html>
