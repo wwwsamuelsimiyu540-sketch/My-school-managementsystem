@@ -1,0 +1,314 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Finance | My School System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b67;color:white;padding:18px}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin:20px 0;box-shadow:0 2px 8px #0001}
+input,select{width:100%;padding:11px;margin:7px 0 13px;border:1px solid #cbd5e1;border-radius:6px}
+button{padding:11px 16px;border:0;border-radius:6px;background:#1266b1;color:white;cursor:pointer;margin:3px}
+.back{background:#475569}
+.danger{background:#dc2626}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:750px}
+th,td{padding:12px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#eaf2fb}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{padding:18px;background:#eaf2fb;border-radius:8px}
+.stat strong{display:block;font-size:22px;margin-top:8px}
+#message{font-weight:bold}
+</style>
+</head>
+<body>
+<header>
+<h2>💰 My School System — Finance</h2>
+<p>Manage school fees and student payments</p>
+</header><main>
+<button class="back" onclick="location.href='school-admin.html'">← Back to Dashboard</button><section class="card">
+<h3>Financial Summary</h3>
+<div class="summary">
+<div class="stat">Total Fees Charged<strong id="totalFees">KES 0.00</strong></div>
+<div class="stat">Total Payments<strong id="totalPaid">KES 0.00</strong></div>
+<div class="stat">Outstanding Balance<strong id="totalBalance">KES 0.00</strong></div>
+</div>
+<p><small>Summary is calculated from the records stored in this browser.</small></p>
+</section><section class="card">
+<h3>Register Student Fee</h3>
+<form id="feeForm">
+<label>Admission Number *</label>
+<input id="admission" required placeholder="e.g. ADM001"><label>Student Name *</label>
+<input id="studentName" required placeholder="Student full name">
+
+<label>Class / Grade</label>
+<input id="className" placeholder="e.g. Grade 6">
+
+<label>Academic Term</label>
+<select id="term">
+
+<option>Term 1</option>
+<option>Term 2</option>
+<option>Term 3</option>
+</select><label>Total Fees Due (KES) *</label>
+<input id="feesDue" type="number" min="0" step="0.01" required>
+
+<button type="submit">Save Fee Record</button>
+<button type="reset" class="back">Clear Form</button>
+
+</form>
+<p id="message" role="status"></p>
+</section><section class="card">
+<h3>Record Student Payment</h3>
+<form id="paymentForm">
+<label>Admission Number *</label>
+<input id="payAdmission" required placeholder="Student admission number"><label>Payment Amount (KES) *</label>
+<input id="amount" type="number" min="0.01" step="0.01" required>
+
+<label>Payment Date *</label>
+<input id="paymentDate" type="date" required>
+
+<label>Payment Method</label>
+<select id="method">
+
+<option>Cash</option>
+<option>M-Pesa</option>
+<option>Bank Transfer</option>
+<option>Other</option>
+</select><label>Transaction / Receipt Reference</label>
+<input id="reference" placeholder="Receipt number or transaction reference">
+
+<button type="submit">Record Payment</button>
+
+</form>
+</section><section class="card">
+<h3>Student Fee Records</h3>
+<input id="search" placeholder="Search by admission number, name or class..." oninput="render()">
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Admission No.</th>
+<th>Student Name</th>
+<th>Class</th>
+<th>Term</th>
+<th>Fees Due</th>
+<th>Paid</th>
+<th>Balance</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="feeRows"></tbody>
+</table>
+</div>
+</section><section class="card">
+<h3>Payment History</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Admission No.</th>
+<th>Amount</th>
+<th>Method</th>
+<th>Reference</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="paymentRows"></tbody>
+</table>
+</div>
+</section>
+</main><script>
+const FEE_KEY="mySchoolFees";
+const PAYMENT_KEY="mySchoolPayments";
+
+function read(key){
+  try{return JSON.parse(localStorage.getItem(key))||[]}
+  catch{return []}
+}
+
+function write(key,data){
+  localStorage.setItem(key,JSON.stringify(data));
+}
+
+function money(value){
+  return "KES "+Number(value||0).toLocaleString("en-KE",{
+    minimumFractionDigits:2,maximumFractionDigits:2
+  });
+}
+
+function render(){
+  const fees=read(FEE_KEY);
+  const payments=read(PAYMENT_KEY);
+  const query=document.getElementById("search").value.toLowerCase();
+
+  const feeRows=document.getElementById("feeRows");
+  feeRows.innerHTML="";
+  let filteredFees=fees.filter(f=>
+    [f.admission,f.studentName,f.className].some(v=>
+      (v||"").toLowerCase().includes(query)
+    )
+  );
+
+  filteredFees.forEach(fee=>{
+    const paid=payments.filter(p=>
+      p.admission.toLowerCase()===fee.admission.toLowerCase() &&
+      p.term===fee.term
+    ).reduce((sum,p)=>sum+Number(p.amount),0);
+
+    const balance=Number(fee.feesDue)-paid;
+    const tr=document.createElement("tr");
+
+    [
+      fee.admission,fee.studentName,fee.className,fee.term,
+      money(fee.feesDue),money(paid),money(balance)
+    ].forEach(value=>{
+      const td=document.createElement("td");
+      td.textContent=value||"—";
+      tr.appendChild(td);
+    });
+
+    const action=document.createElement("td");
+    const btn=document.createElement("button");
+    btn.textContent="Delete";
+    btn.className="danger";
+    btn.onclick=()=>deleteFee(fee.id);
+    action.appendChild(btn);
+    tr.appendChild(action);
+    feeRows.appendChild(tr);
+  });
+
+  const totalFees=fees.reduce((sum,f)=>sum+Number(f.feesDue),0);
+  const totalPaid=fees.reduce((sum,f)=>{
+    return sum+payments.filter(p=>
+      p.admission.toLowerCase()===f.admission.toLowerCase() &&
+      p.term===f.term
+    ).reduce((a,p)=>a+Number(p.amount),0);
+  },0);
+
+  document.getElementById("totalFees").textContent=money(totalFees);
+  document.getElementById("totalPaid").textContent=money(totalPaid);
+  document.getElementById("totalBalance").textContent=money(totalFees-totalPaid);
+
+  const paymentRows=document.getElementById("paymentRows");
+  paymentRows.innerHTML="";
+
+  payments.forEach(payment=>{
+    const tr=document.createElement("tr");
+    [payment.date,payment.admission,money(payment.amount),
+     payment.method,payment.reference].forEach(value=>{
+      const td=document.createElement("td");
+      td.textContent=value||"—";
+      tr.appendChild(td);
+    });
+
+    const action=document.createElement("td");
+    const btn=document.createElement("button");
+    btn.textContent="Delete";
+    btn.className="danger";
+    btn.onclick=()=>deletePayment(payment.id);
+    action.appendChild(btn);
+    tr.appendChild(action);
+    paymentRows.appendChild(tr);
+  });
+}
+
+document.getElementById("feeForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const admission=document.getElementById("admission").value.trim();
+  const studentName=document.getElementById("studentName").value.trim();
+  const className=document.getElementById("className").value.trim();
+  const term=document.getElementById("term").value;
+  const feesDue=Number(document.getElementById("feesDue").value);
+
+  if(feesDue<0 || !Number.isFinite(feesDue)){
+    showMessage("Enter a valid fee amount.",true);return;
+  }
+
+  const fees=read(FEE_KEY);
+  const exists=fees.some(f=>
+    f.admission.toLowerCase()===admission.toLowerCase() && f.term===term
+  );
+
+  if(exists){
+    showMessage("A fee record already exists for this student and term.",true);
+    return;
+  }
+
+  fees.push({id:Date.now().toString(),admission,studentName,className,term,feesDue});
+  write(FEE_KEY,fees);
+  this.reset();
+  showMessage("Fee record saved successfully.",false);
+  render();
+});
+
+document.getElementById("paymentForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const admission=document.getElementById("payAdmission").value.trim();
+  const amount=Number(document.getElementById("amount").value);
+  const date=document.getElementById("paymentDate").value;
+  const method=document.getElementById("method").value;
+  const reference=document.getElementById("reference").value.trim();
+
+  const fees=read(FEE_KEY);
+  const matchingFee=fees.find(f=>
+    f.admission.toLowerCase()===admission.toLowerCase()
+  );
+
+  if(!matchingFee){
+    showMessage("Create a fee record for this student before recording payment.",true);
+    return;
+  }
+
+  if(amount<=0 || !Number.isFinite(amount)){
+    showMessage("Enter a valid payment amount.",true);return;
+  }
+
+  const payments=read(PAYMENT_KEY);
+  payments.push({
+    id:Date.now().toString(),admission,amount,date,method,reference,
+    term:matchingFee.term
+  });
+
+  write(PAYMENT_KEY,payments);
+  this.reset();
+  document.getElementById("paymentDate").value=new Date().toISOString().slice(0,10);
+  showMessage("Payment recorded successfully.",false);
+  render();
+});
+
+function deleteFee(id){
+  if(!confirm("Delete this fee record?"))return;
+  const fees=read(FEE_KEY);
+  const fee=fees.find(f=>f.id===id);
+  if(fee){
+    const payments=read(PAYMENT_KEY).filter(p=>
+      !(p.admission.toLowerCase()===fee.admission.toLowerCase() && p.term===fee.term)
+    );
+    write(PAYMENT_KEY,payments);
+  }
+  write(FEE_KEY,read(FEE_KEY).filter(f=>f.id!==id));
+  render();
+}
+
+function deletePayment(id){
+  if(!confirm("Delete this payment record?"))return;
+  write(PAYMENT_KEY,read(PAYMENT_KEY).filter(p=>p.id!==id));
+  render();
+}
+
+function showMessage(text,error){
+  const el=document.getElementById("message");
+  el.textContent=text;
+  el.style.color=error?"#dc2626":"#15803d";
+}
+
+document.getElementById("paymentDate").value=new Date().toISOString().slice(0,10);
+render();
+</script></body>
+                                      </html>
