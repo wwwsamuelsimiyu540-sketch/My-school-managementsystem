@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Results</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f1f5f9;color:#1e293b}
+header{background:#123b70;color:white;padding:18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+main{max-width:1000px;margin:25px auto;padding:0 14px}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px}
+h2{color:#123b70}label{display:block;font-weight:bold;margin:10px 0 6px}
+input,select{width:100%;padding:11px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+button{padding:10px 14px;border:0;border-radius:6px;cursor:pointer;margin:4px;font-weight:bold}
+.primary{background:#1763c6;color:white}.secondary{background:#475569;color:white}.danger{background:#dc2626;color:white}.success{background:#15803d;color:white}
+#message{padding:10px;margin:10px 0;overflow-wrap:anywhere}
+.tablewrap{overflow-x:auto;margin-top:15px}table{width:100%;border-collapse:collapse;min-width:500px}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}th{background:#eaf1fb}
+</style>
+</head>
+<body>
+<header>
+<h1>Assessment and Results</h1>
+<div>
+<button id="dashboardBtn" class="secondary">Dashboard</button>
+<button id="logoutBtn" class="danger">Log Out</button>
+</div>
+</header>
+<main>
+<div id="message" role="status"></div>
+
+<section class="card">
+<h2>Create Assessment</h2>
+<form id="assessmentForm">
+<div class="grid">
+<div><label for="assessmentName">Assessment name</label><input id="assessmentName" required maxlength="150" placeholder="e.g. End Term Exam"></div>
+<div><label for="classSelect">Class</label><select id="classSelect" required><option value="">Loading classes...</option></select></div>
+<div><label for="subjectSelect">Subject</label><select id="subjectSelect" required><option value="">Loading subjects...</option></select></div>
+<div><label for="assessmentDate">Assessment date</label><input type="date" id="assessmentDate" required></div>
+</div>
+<button class="primary" type="submit" id="createBtn">Create Assessment</button>
+</form>
+</section>
+
+<section class="card">
+<h2>Enter Student Marks</h2>
+<label for="assessmentSelect">Select Assessment</label>
+<select id="assessmentSelect"><option value="">Loading assessments...</option></select>
+<button id="loadMarksBtn" class="primary" type="button">Load Students</button>
+<div id="marksArea" class="tablewrap"></div>
+<button id="saveMarksBtn" class="success" type="button" disabled>Save Marks</button>
+<p>Enter marks of zero or above. This database does not set a maximum mark.</p>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL="https://apshhzczrofxwjsgenlv.supabase.co";
+const SUPABASE_KEY="sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const message=document.getElementById("message");
+const classSelect=document.getElementById("classSelect");
+const subjectSelect=document.getElementById("subjectSelect");
+const assessmentSelect=document.getElementById("assessmentSelect");
+const marksArea=document.getElementById("marksArea");
+const saveMarksBtn=document.getElementById("saveMarksBtn");
+let activeAssessment=null;
+
+function showMessage(text,ok=false){
+ message.textContent=text;
+ message.style.background=ok?"#dcfce7":"#fee2e2";
+ message.style.color=ok?"#166534":"#991b1b";
+}
+
+async function start(){
+ const {data,error}=await client.auth.getSession();
+ if(error){showMessage(error.message);return;}
+ if(!data.session){location.replace("index.html");return;}
+
+ const [classes,subjects]=await Promise.all([
+  client.from("classes").select("id,class_name").order("class_name"),
+  client.from("subjects").select("id,subject_name").order("subject_name")
+ ]);
+ if(classes.error||subjects.error){showMessage((classes.error||subjects.error).message);return;}
+
+ classSelect.replaceChildren(new Option("Choose class",""));
+ subjects.data.forEach(s=>subjectSelect.add(new Option(s.subject_name,s.id)));
+ classes.data.forEach(c=>classSelect.add(new Option(c.class_name,c.id)));
+ await loadAssessments();
+}
+
+async function loadAssessments(){
+ const {data,error}=await client.from("assessments")
+  .select("id,assessment_name,assessment_date,classes(class_name),subjects(subject_name)")
+  .order("assessment_date",{ascending:false});
+ if(error){showMessage(error.message);return;}
+
+ assessmentSelect.replaceChildren(new Option("Choose assessment",""));
+ (data||[]).forEach(a=>{
+  const label=`${a.assessment_name} — ${a.classes?.class_name||""} — ${a.subjects?.subject_name||""} — ${a.assessment_date||""}`;
+  assessmentSelect.add(new Option(label,a.id));
+ });
+}
+
+document.getElementById("assessmentForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const btn=document.getElementById("createBtn");
+ btn.disabled=true;
+
+ const record={
+  assessment_name:document.getElementById("assessmentName").value.trim(),
+  class_id:Number(classSelect.value),
+  subject_id:Number(subjectSelect.value),
+  assessment_date:document.getElementById("assessmentDate").value
+ };
+
+ const {data,error}=await client.from("assessments").insert([record]).select("id");
+ btn.disabled=false;
+
+ if(error){showMessage(error.message);return;}
+ e.target.reset();
+ showMessage("Assessment created successfully.",true);
+ await loadAssessments();
+ if(data?.length)assessmentSelect.value=String(data[0].id);
+});
+
+async function loadMarks(){
+ marksArea.replaceChildren();
+ saveMarksBtn.disabled=true;
+ if(!assessmentSelect.value)return showMessage("Choose an assessment first.");
+
+ const {data:assessment,error:aError}=await client.from("assessments")
+  .select("id,assessment_name,class_id").eq("id",Number(assessmentSelect.value)).single();
+ if(aError){showMessage(aError.message);return;}
+ activeAssessment=assessment;
+
+ const {data:students,error:sError}=await client.from("students")
+  .select("id,admission_number,first_name,last_name")
+  .eq("class_id",assessment.class_id).order("first_name");
+ if(sError){showMessage(sError.message);return;}
+
+ const {data:results,error:rError}=await client.from("results")
+  .select("student_id,marks").eq("assessment_id",assessment.id);
+ if(rError){showMessage(rError.message);return;}
+
+ if(!students.length){marksArea.textContent="No students in this class.";return;}
+ const saved=new Map((results||[]).map(r=>[String(r.student_id),r.marks]));
+
+ const table=document.createElement("table");
+ table.innerHTML="<thead><tr><th>Admission No.</th><th>Student</th><th>Marks</th></tr></thead>";
+ const tbody=document.createElement("tbody");
+
+ students.forEach(s=>{
+  const tr=document.createElement("tr");
+  const a=document.createElement("td");a.textContent=s.admission_number||"";
+  const n=document.createElement("td");n.textContent=s.first_name+" "+s.last_name;
+  const td=document.createElement("td");
+  const input=document.createElement("input");
+  input.type="number";input.min="0";input.step="0.01";input.required=true;
+  input.dataset.studentId=s.id;input.value=saved.has(String(s.id))?saved.get(String(s.id)):"";
+  td.appendChild(input);tr.append(a,n,td);tbody.appendChild(tr);
+ });
+ table.appendChild(tbody);marksArea.appendChild(table);saveMarksBtn.disabled=false;
+}
+
+async function saveMarks(){
+ if(!activeAssessment)return showMessage("Load an assessment first.");
+ const inputs=[...marksArea.querySelectorAll("input[data-student-id]")];
+ if(!inputs.length)return showMessage("No student marks to save.");
+
+ const records=[];
+ for(const input of inputs){
+  if(input.value.trim()===""||!Number.isFinite(Number(input.value))||Number(input.value)<0)
+   return showMessage("Enter a valid mark of zero or above for every student.");
+  records.push({
+   student_id:Number(input.dataset.studentId),
+   assessment_id:activeAssessment.id,
+   marks:Number(input.value)
+  });
+ }
+
+ saveMarksBtn.disabled=true;
+ const {error}=await client.from("results")
+  .upsert(records,{onConflict:"student_id,assessment_id"});
+ saveMarksBtn.disabled=false;
+ if(error){showMessage(error.message);return;}
+ showMessage("Marks saved successfully.",true);
+}
+
+document.getElementById("loadMarksBtn").addEventListener("click",loadMarks);
+saveMarksBtn.addEventListener("click",saveMarks);
+document.getElementById("dashboardBtn").addEventListener("click",()=>location.href="index.html");
+document.getElementById("logoutBtn").addEventListener("click",async()=>{
+ if(!confirm("Log out?"))return;
+ const {error}=await client.auth.signOut();
+ if(error){showMessage(error.message);return;}
+ location.replace("index.html");
+});
+start();
+</script>
+</body>
+</html>
