@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My School System - Connection Test</title>
+</head>
+<body>
+  <h1>My School System</h1>
+  <h2>Supabase Connection Test</h2>
+
+  <p id="status">Checking connection...</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+    const status = document.getElementById("status");
+
+    try {
+      const client = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
+
+      window.schoolSupabase = client;
+
+      client.auth.getSession()
+        .then(({ data, error }) => {
+          if (error) {
+            status.textContent =
+              "Client initialized, but session check failed: " + error.message;
+            return;
+          }
+
+          status.textContent =
+            "Supabase client initialized successfully. " +
+            (data.session
+              ? "A user session exists."
+              : "No user is logged in yet.");
+        })
+        .catch((error) => {
+          status.textContent =
+            "Client initialized, but the session check failed: " +
+            error.message;
+        });
+    } catch (error) {
+      status.textContent = "Connection setup failed: " + error.message;
+    }
+  </script>
+</body>
+</html>
