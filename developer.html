@@ -1,0 +1,369 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developer Control Panel | My School System</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#122440;color:white;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+header h2{margin:0;font-size:21px}
+header small{color:#cbd5e1}
+button,input,select{font:inherit}
+button{border:0;border-radius:7px;padding:11px 15px;cursor:pointer;background:#2563eb;color:white}
+button:hover{opacity:.9}
+.logout{background:#dc2626}
+.layout{display:flex;min-height:calc(100vh - 70px)}
+nav{width:230px;background:#172b49;padding:18px 12px;flex-shrink:0}
+nav button{display:block;width:100%;text-align:left;margin-bottom:7px;background:transparent;color:#e2e8f0}
+nav button.active,nav button:hover{background:#314765}
+main{padding:25px;width:100%;min-width:0}
+.section{display:none}
+.section.active{display:block}
+h1{margin-top:0;font-size:27px}
+.muted{color:#64748b}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:15px;margin:20px 0}
+.card,.panel{background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px #0f172a0b;margin-bottom:18px}
+.card p{color:#64748b;margin:0 0 10px}
+.number{font-size:29px;font-weight:bold;overflow-wrap:anywhere}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+input,select{padding:11px;border:1px solid #cbd5e1;border-radius:7px;background:white;max-width:100%}
+.toolbar input{flex:1;min-width:160px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+th{background:#f8fafc}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.formgrid input,.formgrid select{width:100%}
+.status{padding:14px;background:#eff6ff;border-radius:8px;overflow-wrap:anywhere}
+.danger{background:#dc2626}
+.secondary{background:#475569}
+#notice{white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0}
+@media(max-width:700px){.layout{display:block}nav{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}nav button{font-size:13px;padding:10px}main{padding:15px}header{padding:15px}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h2>MY SCHOOL SYSTEM</h2>
+    <small>Developer Super Admin</small>
+  </div>
+  <button class="logout" id="logout">Log out</button>
+</header>
+
+<div class="layout">
+<nav>
+  <button class="active" data-page="overview">▦ Overview</button>
+  <button data-page="schools">🏫 Schools</button>
+  <button data-page="register">＋ Register School</button>
+  <button data-page="users">👥 User Management</button>
+  <button data-page="monitor">🛠 System Monitor</button>
+  <button data-page="settings">⚙ Settings</button>
+  <button id="reload">↻ Refresh Data</button>
+</nav>
+
+<main>
+<div id="notice" role="status"></div>
+
+<section id="overview" class="section active">
+  <h1>Developer Dashboard</h1>
+  <p class="muted">Your central control room for the entire school platform.</p>
+  <div class="cards">
+    <div class="card"><p>Registered Schools</p><div class="number" id="schoolCount">—</div></div>
+    <div class="card"><p>Active Schools</p><div class="number" id="activeCount">—</div></div>
+    <div class="card"><p>School Administrators</p><div class="number" id="adminCount">—</div></div>
+    <div class="card"><p>My Account</p><div id="email">Checking...</div></div>
+  </div>
+  <div class="panel">
+    <h3>Platform overview</h3>
+    <p id="lastUpdated" class="muted">Waiting for database connection...</p>
+    <button id="overviewRefresh">Refresh overview</button>
+  </div>
+  <div class="panel">
+    <h3>Quick actions</h3>
+    <button data-goto="register">Register a school</button>
+    <button data-goto="schools" class="secondary">View registered schools</button>
+  </div>
+</section>
+
+<section id="schools" class="section">
+  <h1>School Management</h1>
+  <p class="muted">Find and review schools registered on the platform.</p>
+  <div class="toolbar">
+    <input id="searchSchool" placeholder="Search by name or school code">
+    <button id="searchBtn">Search</button>
+    <button id="exportBtn" class="secondary">Export CSV</button>
+  </div>
+  <div class="panel tablewrap">
+    <table>
+      <thead><tr><th>School</th><th>Code</th><th>County</th><th>Levels</th><th>Registered</th></tr></thead>
+      <tbody id="schoolRows"><tr><td colspan="5">Loading...</td></tr></tbody>
+    </table>
+  </div>
+  <p class="muted">School suspension and activation will be enabled after a protected school-status field and server-side permissions are configured.</p>
+</section>
+
+<section id="register" class="section">
+  <h1>Register a School</h1>
+  <p class="muted">Add a school to the platform registry.</p>
+  <div class="panel">
+    <form id="schoolForm">
+      <div class="formgrid">
+        <input id="schoolName" placeholder="School name" required>
+        <input id="schoolCode" placeholder="Unique school code" required>
+        <input id="county" placeholder="County">
+      </div>
+      <h3>Education levels offered</h3>
+      <p><label><input type="checkbox" name="level" value="primary"> Primary (Grades 1–6)</label></p>
+      <p><label><input type="checkbox" name="level" value="junior"> Junior (Grades 7–9)</label></p>
+      <p><label><input type="checkbox" name="level" value="senior"> Senior (Grades 10–12)</label></p>
+      <button type="submit">Register School</button>
+    </form>
+  </div>
+</section>
+
+<section id="users" class="section">
+  <h1>User Management</h1>
+  <div class="panel">
+    <h3>Accounts and permissions</h3>
+    <p>Manage school administrators and teachers through verified school memberships.</p>
+    <p class="muted">For security, this page does not expose the private Supabase Auth user directory to browser code. Protected account management requires a server-side function.</p>
+  </div>
+</section>
+
+<section id="monitor" class="section">
+  <h1>System Monitor</h1>
+  <div class="cards">
+    <div class="card"><p>Database connection</p><div class="number" id="dbStatus">Checking</div></div>
+    <div class="card"><p>Last check</p><div id="dbChecked">—</div></div>
+  </div>
+  <div class="panel">
+    <h3>Diagnostic information</h3>
+    <p id="diagnostic">Checking access to the school registry.</p>
+    <p class="muted">This tests school-registry access only. It does not measure server uptime, backups or every database table.</p>
+    <button id="diagnoseBtn">Run check</button>
+  </div>
+</section>
+
+<section id="settings" class="section">
+  <h1>Platform Settings</h1>
+  <div class="panel">
+    <h3>Platform information</h3>
+    <p>System: My School System</p>
+    <p>Hosting: GitHub Pages</p>
+    <p>Database and authentication: Supabase</p>
+    <p class="muted">Sensitive platform settings must be managed securely, not by exposing secret keys in this page.</p>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+const SUPABASE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let schoolCache = [];
+
+function notice(text, error = false) {
+  const el = document.getElementById("notice");
+  el.textContent = text;
+  el.style.color = error ? "#b91c1c" : "#166534";
+}
+
+function showPage(name) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll("nav [data-page]").forEach(b => b.classList.remove("active"));
+  document.getElementById(name).classList.add("active");
+  const navButton = document.querySelector('nav [data-page="' + name + '"]');
+  if (navButton) navButton.classList.add("active");
+  notice("");
+  if (name === "schools") loadSchools();
+}
+
+document.querySelectorAll("nav [data-page]").forEach(b =>
+  b.addEventListener("click", () => showPage(b.dataset.page))
+);
+
+document.querySelectorAll("[data-goto]").forEach(b =>
+  b.addEventListener("click", () => showPage(b.dataset.goto))
+);
+
+async function verifyDeveloper() {
+  const { data, error } = await db.auth.getSession();
+  if (error || !data.session) {
+    location.replace("index.html");
+    return false;
+  }
+
+  currentUser = data.session.user;
+
+  const { data: role, error: roleError } = await db
+    .from("platform_admins")
+    .select("role")
+    .eq("user_id", currentUser.id)
+    .eq("role", "developer")
+    .maybeSingle();
+
+  if (roleError || !role) {
+    document.body.innerHTML =
+      "<main style='padding:30px;font-family:Arial'><h1>Access denied</h1><p>This account has not been verified as a platform developer.</p><p>Return to the <a href='index.html'>login page</a> or ask the platform owner to check the developer role.</p></main>";
+    return false;
+  }
+
+  document.getElementById("email").textContent = currentUser.email || "Signed in";
+  return true;
+}
+
+async function loadOverview() {
+  notice("Loading platform data...");
+  const { count, error } = await db
+    .from("schools")
+    .select("id", { count: "exact", head: true });
+
+  if (error) {
+    document.getElementById("schoolCount").textContent = "—";
+    document.getElementById("activeCount").textContent = "—";
+    document.getElementById("adminCount").textContent = "—";
+    document.getElementById("dbStatus").textContent = "Error";
+    document.getElementById("diagnostic").textContent = error.message;
+    notice("Could not load schools. Check the schools table and its access policies.", true);
+  } else {
+    document.getElementById("schoolCount").textContent = count ?? 0;
+    document.getElementById("dbStatus").textContent = "Connected";
+    document.getElementById("diagnostic").textContent = "School registry query succeeded.";
+    notice("Dashboard data refreshed.");
+  }
+
+  // The current schema does not yet have a verified status column.
+  document.getElementById("activeCount").textContent = "Not configured";
+  document.getElementById("adminCount").textContent = "Not configured";
+  document.getElementById("lastUpdated").textContent =
+    "Last checked: " + new Date().toLocaleString();
+  document.getElementById("dbChecked").textContent = new Date().toLocaleTimeString();
+}
+
+async function loadSchools() {
+  const body = document.getElementById("schoolRows");
+  body.innerHTML = "<tr><td colspan='5'>Loading schools...</td></tr>";
+
+  const { data, error } = await db
+    .from("schools")
+    .select("id,school_name,school_code,county,levels,created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    body.innerHTML = "<tr><td colspan='5'>Could not load schools. Check database access.</td></tr>";
+    notice("School list error: " + error.message, true);
+    return;
+  }
+
+  schoolCache = data || [];
+  renderSchools();
+}
+
+function renderSchools() {
+  const term = document.getElementById("searchSchool").value.trim().toLowerCase();
+  const rows = schoolCache.filter(s =>
+    (s.school_name || "").toLowerCase().includes(term) ||
+    (s.school_code || "").toLowerCase().includes(term)
+  );
+  const body = document.getElementById("schoolRows");
+
+  if (!rows.length) {
+    body.innerHTML = "<tr><td colspan='5'>No matching schools found.</td></tr>";
+    return;
+  }
+
+  body.innerHTML = "";
+  rows.forEach(s => {
+    const tr = document.createElement("tr");
+    [
+      s.school_name,
+      s.school_code,
+      s.county || "—",
+      Array.isArray(s.levels) ? s.levels.join(", ") : "—",
+      s.created_at ? new Date(s.created_at).toLocaleDateString() : "—"
+    ].forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById("searchBtn").onclick = renderSchools;
+document.getElementById("searchSchool").addEventListener("input", renderSchools);
+document.getElementById("overviewRefresh").onclick = loadOverview;
+document.getElementById("reload").onclick = async () => {
+  await loadOverview();
+  if (document.getElementById("schools").classList.contains("active")) await loadSchools();
+};
+document.getElementById("diagnoseBtn").onclick = loadOverview;
+
+document.getElementById("exportBtn").onclick = () => {
+  const rows = [["School", "Code", "County", "Levels", "Registered"]];
+  schoolCache.forEach(s => rows.push([
+    s.school_name, s.school_code, s.county || "",
+    Array.isArray(s.levels) ? s.levels.join("; ") : "",
+    s.created_at || ""
+  ]));
+  const csv = rows.map(row => row.map(v =>
+    '"' + String(v ?? "").replace(/"/g, '""') + '"'
+  ).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8;"}));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "registered-schools.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById("schoolForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const levels = [...document.querySelectorAll('input[name="level"]:checked')].map(x => x.value);
+  if (!levels.length) {
+    notice("Select at least one education level.", true);
+    return;
+  }
+
+  const school_name = document.getElementById("schoolName").value.trim();
+  const school_code = document.getElementById("schoolCode").value.trim().toUpperCase();
+  const county = document.getElementById("county").value.trim();
+
+  const { data: school, error } = await db.from("schools").insert({
+    school_name, school_code, county, levels, created_by: currentUser.id
+  }).select("id").single();
+
+  if (error) {
+    notice("Registration failed: " + error.message, true);
+    return;
+  }
+
+  // Register the developer as the first school admin only if that is
+  // explicitly desired. For platform registration, don't create this membership.
+  document.getElementById("schoolForm").reset();
+  notice("School registered successfully. School ID: " + school.id);
+  await loadOverview();
+  await loadSchools();
+  showPage("schools");
+});
+
+document.getElementById("logout").onclick = async () => {
+  await db.auth.signOut();
+  location.replace("index.html");
+};
+
+(async function init() {
+  if (await verifyDeveloper()) {
+    await loadOverview();
+  }
+})();
+</script>
+</body>
+</html>
