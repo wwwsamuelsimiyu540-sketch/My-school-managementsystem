@@ -86,6 +86,52 @@
       <div class="tile"><h3>Results</h3><p>Manage assessments and marks.</p></div>
       <div class="tile"><h3>Fees</h3><p>Manage fee records and payments.</p></div>
     </div>
+    
+<section id="teachersSection" class="tile" style="margin-top:20px;">
+  <h2>Teachers Management</h2>
+  <p>Register and manage school teachers.</p>
+
+  <form id="teacherForm">
+    <label for="teacherName">Full name</label>
+    <input id="teacherName" type="text"
+           placeholder="Enter full name" required>
+
+    <label for="teacherEmail">Email address</label>
+    <input id="teacherEmail" type="email"
+           placeholder="teacher@example.com">
+
+    <label for="teacherPhone">Phone number</label>
+    <input id="teacherPhone" type="tel"
+           placeholder="Enter phone number">
+
+    <button type="submit" id="saveTeacherButton">
+      Save Teacher
+    </button>
+  </form>
+
+  <p id="teacherMessage" role="status" aria-live="polite"></p>
+
+  <button type="button" id="refreshTeachersButton">
+    Refresh Teachers
+  </button>
+
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; margin-top:15px;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:8px;">Name</th>
+          <th style="text-align:left;padding:8px;">Email</th>
+          <th style="text-align:left;padding:8px;">Phone</th>
+          <th style="text-align:left;padding:8px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="teachersTableBody">
+        <tr><td colspan="4">Loading teachers...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
     <button id="logoutButton">Log out</button>
   </main>
 
@@ -189,6 +235,136 @@
     });
 
     startApp();
+    
+const teacherForm = document.getElementById("teacherForm");
+const teacherMessage = document.getElementById("teacherMessage");
+const teachersTableBody = document.getElementById("teachersTableBody");
+const saveTeacherButton = document.getElementById("saveTeacherButton");
+
+function showTeacherMessage(text, isError = false) {
+  teacherMessage.textContent = text;
+  teacherMessage.style.color = isError ? "#b91c1c" : "#166534";
+}
+
+async function loadTeachers() {
+  if (!client) {
+    showTeacherMessage("Supabase is not connected.", true);
+    return;
+  }
+
+  teachersTableBody.innerHTML =
+    '<tr><td colspan="4">Loading teachers...</td></tr>';
+
+  const { data, error } = await client
+    .from("teachers")
+    .select("id, full_name, email, phone")
+    .order("full_name");
+
+  if (error) {
+    teachersTableBody.innerHTML = "";
+    showTeacherMessage("Could not load teachers: " + error.message, true);
+    return;
+  }
+
+  teachersTableBody.innerHTML = "";
+
+  if (!data.length) {
+    teachersTableBody.innerHTML =
+      '<tr><td colspan="4">No teachers registered yet.</td></tr>';
+    return;
+  }
+
+  data.forEach(function(teacher) {
+    const row = document.createElement("tr");
+
+    [teacher.full_name, teacher.email || "-", teacher.phone || "-"]
+      .forEach(function(value) {
+        const cell = document.createElement("td");
+        cell.style.padding = "8px";
+        cell.style.borderBottom = "1px solid #ddd";
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+
+    const actionCell = document.createElement("td");
+    actionCell.style.padding = "8px";
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.textContent = "Delete";
+    deleteButton.style.margin = "0";
+
+    deleteButton.addEventListener("click", async function() {
+      if (!confirm("Delete teacher " + teacher.full_name + "?")) return;
+
+      deleteButton.disabled = true;
+
+      const { error: deleteError } = await client
+        .from("teachers")
+        .delete()
+        .eq("id", teacher.id);
+
+      if (deleteError) {
+        showTeacherMessage(
+          "Could not delete teacher: " + deleteError.message, true
+        );
+        deleteButton.disabled = false;
+        return;
+      }
+
+      showTeacherMessage("Teacher deleted successfully.");
+      await loadTeachers();
+    });
+
+    actionCell.appendChild(deleteButton);
+    row.appendChild(actionCell);
+    teachersTableBody.appendChild(row);
+  });
+}
+
+teacherForm.addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  if (!client) {
+    showTeacherMessage("Supabase is not connected.", true);
+    return;
+  }
+
+  saveTeacherButton.disabled = true;
+  showTeacherMessage("Saving teacher...");
+
+  try {
+    const fullName = document.getElementById("teacherName").value.trim();
+    const email = document.getElementById("teacherEmail").value.trim();
+    const phone = document.getElementById("teacherPhone").value.trim();
+
+    if (!fullName) {
+      showTeacherMessage("Please enter the teacher's full name.", true);
+      return;
+    }
+
+    const { error } = await client.from("teachers").insert([{
+      full_name: fullName,
+      email: email || null,
+      phone: phone || null
+    }]);
+
+    if (error) throw error;
+
+    teacherForm.reset();
+    showTeacherMessage("Teacher registered successfully!");
+    await loadTeachers();
+
+  } catch (error) {
+    showTeacherMessage("Could not save teacher: " + error.message, true);
+  } finally {
+    saveTeacherButton.disabled = false;
+  }
+});
+
+document.getElementById("refreshTeachersButton")
+  .addEventListener("click", loadTeachers);
+      
   </script>
   
 <script>
