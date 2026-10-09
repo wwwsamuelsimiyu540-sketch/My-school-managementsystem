@@ -84,7 +84,11 @@ th{background:#f8fafc}
   </div>
   <div class="panel">
     <h3>Quick actions</h3>
-    <button data-goto="register">Register a school</button>
+    <button data-goto="register">Register a school
+<button type="button" onclick="openAdminInviteForm()">
+  Register School Administrator
+</button>
+    </button>
     <button data-goto="schools" class="secondary">View registered schools</button>
   </div>
 </section>
@@ -365,5 +369,44 @@ document.getElementById("logout").onclick = async () => {
   }
 })();
 </script>
+  
+<div id="adminInviteModal" style="
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:#0008; overflow:auto; padding:20px;
+">
+  <div style="
+    background:white; color:#222; max-width:500px;
+    margin:30px auto; padding:24px; border-radius:12px;
+  ">
+    <h2>Register School Administrator</h2>
+    <p>The administrator will receive an email to set their password.</p>
+
+    <form id="adminInviteForm">
+      <label for="adminFullName">Full name</label>
+      <input id="adminFullName" required maxlength="120"
+        style="display:block;width:100%;box-sizing:border-box;padding:10px;margin:8px 0 16px">
+
+      <label for="adminEmail">Email address</label>
+      <input id="adminEmail" type="email" required
+        style="display:block;width:100%;box-sizing:border-box;padding:10px;margin:8px 0 16px">
+
+      <label for="adminSchool">Select school</label>
+      <select id="adminSchool" required
+        style="display:block;width:100%;box-sizing:border-box;padding:10px;margin:8px 0 16px">
+        <option value="">Loading schools...</option>
+      </select>
+
+      <button id="sendAdminInvite" type="submit">
+        Send invitation
+      </button>
+      <button type="button" onclick="closeAdminInviteForm()">
+        Cancel
+      </button>
+
+      <p id="adminInviteMessage" role="status"></p>
+    </form>
+  </div>
+</div>
+  
 </body>
 </html>
