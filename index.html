@@ -376,23 +376,43 @@
         const password =
           document.getElementById("password").value;
 
-        const { data, error } =
-          await client.auth.signInWithPassword({
-            email: email,
-            password: password
-          });
+        
+const { data, error } =
+  await client.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
 
-        if (error) {
-          throw error;
-        }
+if (error) {
+  throw error;
+}
 
-        if (!data.user) {
-          throw new Error(
-            "Login did not return a user. Please try again."
-          );
-        }
+if (!data.user) {
+  throw new Error(
+    "Login did not return a user. Please try again."
+  );
+}
 
-        showDashboard(data.user);
+// Check whether this user is a developer
+const { data: developer, error: roleError } = await client
+  .from("platform_admins")
+  .select("user_id")
+  .eq("user_id", data.user.id)
+  .eq("role", "developer")
+  .maybeSingle();
+
+if (roleError) {
+  throw new Error(
+    "Could not check developer access: " + roleError.message
+  );
+}
+
+if (developer) {
+  window.location.href = "developer.html";
+} else {
+  showDashboard(data.user);
+}
+
 
       } catch (error) {
         showMessage(
