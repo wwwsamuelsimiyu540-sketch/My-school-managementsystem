@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Reports | My School System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b67;color:white;padding:18px}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin:20px 0;box-shadow:0 2px 8px #0001}
+button{padding:11px 16px;border:0;border-radius:6px;background:#1266b1;color:white;cursor:pointer;margin:3px}
+.back{background:#475569}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{background:#eaf2fb;padding:18px;border-radius:8px}
+.stat span{display:block;font-size:25px;font-weight:bold;margin-top:10px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:550px}
+th,td{padding:12px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#eaf2fb}
+@media print{button{display:none}body{background:white}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<header>
+<h2>📊 My School System — Reports</h2>
+<p>School performance and management summaries</p>
+</header><main>
+<button class="back" onclick="location.href='school-admin.html'">← Back to Dashboard</button>
+<button onclick="window.print()">Print / Save as PDF</button>
+<button onclick="generateCSV()">Export Summary CSV</button>
+<button onclick="refreshReports()">Refresh Reports</button><section class="card">
+<h3>School Overview</h3>
+<div class="grid">
+<div class="stat">Registered Students<span id="students">0</span></div>
+<div class="stat">Registered Teachers<span id="teachers">0</span></div>
+<div class="stat">Classes / Grades<span id="classes">0</span></div>
+<div class="stat">Parents / Guardians<span id="parents">0</span></div>
+<div class="stat">Attendance Records<span id="attendance">0</span></div>
+<div class="stat">Fee Records<span id="feeRecords">0</span></div>
+</div>
+</section><section class="card">
+<h3>Attendance Summary</h3>
+<div class="grid">
+<div class="stat">Present<span id="present">0</span></div>
+<div class="stat">Absent<span id="absent">0</span></div>
+<div class="stat">Late<span id="late">0</span></div>
+<div class="stat">Excused<span id="excused">0</span></div>
+</div>
+<p id="attendanceRate">Attendance rate: 0%</p>
+</section><section class="card">
+<h3>Finance Summary</h3>
+<div class="grid">
+<div class="stat">Fees Charged (KES)<span id="feesDue">0.00</span></div>
+<div class="stat">Payments Recorded (KES)<span id="feesPaid">0.00</span></div>
+<div class="stat">Outstanding Balance (KES)<span id="balance">0.00</span></div>
+</div>
+<p><small>These are summaries of browser-stored prototype records, not verified financial accounts.</small></p>
+</section><section class="card">
+<h3>Academic Records</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Record Type</th><th>Total</th></tr></thead>
+<tbody id="academicRows"></tbody>
+</table>
+</div>
+</section>
+</main><script>
+function read(key){
+  try{return JSON.parse(localStorage.getItem(key))||[]}
+  catch{return []}
+}
+
+function money(value){
+  return Number(value||0).toLocaleString("en-KE",{
+    minimumFractionDigits:2,maximumFractionDigits:2
+  });
+}
+
+function refreshReports(){
+  const students=read("mySchoolStudents");
+  const teachers=read("mySchoolTeachers");
+  const classes=read("mySchoolClasses");
+  const subjects=read("mySchoolSubjects");
+  const years=read("mySchoolYears");
+  const parents=read("mySchoolParents");
+  const attendance=read("mySchoolAttendance");
+  const fees=read("mySchoolFees");
+  const payments=read("mySchoolPayments");
+
+  document.getElementById("students").textContent=students.length;
+  document.getElementById("teachers").textContent=teachers.length;
+  document.getElementById("classes").textContent=classes.length;
+  document.getElementById("parents").textContent=parents.length;
+  document.getElementById("attendance").textContent=attendance.length;
+  document.getElementById("feeRecords").textContent=fees.length;
+
+  const present=attendance.filter(r=>r.status==="Present").length;
+  const absent=attendance.filter(r=>r.status==="Absent").length;
+  const late=attendance.filter(r=>r.status==="Late").length;
+  const excused=attendance.filter(r=>r.status==="Excused").length;
+  const counted=present+absent+late;
+
+  document.getElementById("present").textContent=present;
+  document.getElementById("absent").textContent=absent;
+  document.getElementById("late").textContent=late;
+  document.getElementById("excused").textContent=excused;
+  document.getElementById("attendanceRate").textContent=
+    "Attendance rate (present ÷ present, absent and late): "+
+    (counted ? ((present/counted)*100).toFixed(1) : "0")+"%";
+
+  const totalDue=fees.reduce((sum,f)=>sum+Number(f.feesDue||0),0);
+  const totalPaid=payments.reduce((sum,p)=>sum+Number(p.amount||0),0);
+
+  document.getElementById("feesDue").textContent=money(totalDue);
+  document.getElementById("feesPaid").textContent=money(totalPaid);
+  document.getElementById("balance").textContent=money(totalDue-totalPaid);
+
+  const tbody=document.getElementById("academicRows");
+  tbody.innerHTML="";
+
+  [
+    ["Classes / Grades",classes.length],
+    ["Subjects",subjects.length],
+    ["Academic Years",years.length]
+  ].forEach(item=>{
+    const tr=document.createElement("tr");
+    item.forEach(value=>{
+      const td=document.createElement("td");
+      td.textContent=value;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function generateCSV(){
+  const rows=[
+    ["School Report","Total"],
+    ["Students",read("mySchoolStudents").length],
+    ["Teachers",read("mySchoolTeachers").length],
+    ["Classes",read("mySchoolClasses").length],
+    ["Parents",read("mySchoolParents").length],
+    ["Attendance Records",read("mySchoolAttendance").length],
+    ["Fee Records",read("mySchoolFees").length],
+    ["Subjects",read("mySchoolSubjects").length],
+    ["Academic Years",read("mySchoolYears").length]
+  ];
+
+  const csv=rows.map(row=>row.map(value=>
+    '"'+String(value).replace(/"/g,'""')+'"'
+  ).join(",")).join("\r\n");
+
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download="school-report.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+refreshReports();
+</script></body>
+                                                             </html>
