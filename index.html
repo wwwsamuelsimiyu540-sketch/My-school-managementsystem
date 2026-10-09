@@ -5,16 +5,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>School Management System</title>
+
+  <!-- Supabase JavaScript library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f1f5f9;
       color: #172033;
     }
+
     .card {
+      width: calc(100% - 30px);
       max-width: 430px;
       margin: 55px auto;
       padding: 25px;
@@ -22,7 +30,17 @@
       border-radius: 14px;
       box-shadow: 0 5px 24px #0001;
     }
-    h1, h2 { color: #174ea6; }
+
+    h1, h2 {
+      color: #174ea6;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
     input, button {
       width: 100%;
       padding: 12px;
@@ -30,117 +48,232 @@
       border-radius: 7px;
       font-size: 16px;
     }
-    input { border: 1px solid #cbd5e1; }
+
+    input {
+      border: 1px solid #cbd5e1;
+    }
+
     button {
       border: 0;
       background: #174ea6;
       color: white;
       cursor: pointer;
     }
-    button:disabled { opacity: .6; }
-    #message { white-space: pre-wrap; }
-    .error { color: #b91c1c; }
-    .success { color: #166534; }
-    #dashboard { display: none; padding: 20px; }
+
+    button:hover {
+      background: #123b80;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #message {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .error {
+      color: #b91c1c;
+    }
+
+    .success {
+      color: #166534;
+    }
+
+    #dashboard {
+      display: none;
+      padding: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
     .tiles {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      grid-template-columns: repeat(
+        auto-fit, minmax(145px, 1fr)
+      );
       gap: 14px;
+      margin-top: 20px;
     }
+
     .tile {
-      padding: 20px;
+      padding: 16px;
       background: white;
       border-radius: 10px;
       box-shadow: 0 2px 10px #0001;
     }
-    .tile h3 { margin-top: 0; }
+
+    .tile h3 {
+      margin-top: 0;
+      font-size: 17px;
+    }
+
+    .tile button {
+      margin-bottom: 0;
+    }
+
+    .logout {
+      max-width: 180px;
+      background: #b91c1c;
+      margin-top: 24px;
+    }
+
+    .logout:hover {
+      background: #991b1b;
+    }
+
+    .small {
+      color: #64748b;
+      font-size: 13px;
+    }
   </style>
 </head>
+
 <body>
+
+  <!-- LOGIN SCREEN -->
   <section class="card" id="login">
     <h1>School Login</h1>
     <p>Grades 1–9 School Management System</p>
+
     <form id="loginForm">
       <label for="email">Email address</label>
-      <input id="email" type="email" required
-             placeholder="admin@example.com" autocomplete="username">
+      <input
+        id="email"
+        type="email"
+        required
+        placeholder="admin@example.com"
+        autocomplete="username"
+      >
 
       <label for="password">Password</label>
-      <input id="password" type="password" required
-             placeholder="Enter your password"
-             autocomplete="current-password">
+      <input
+        id="password"
+        type="password"
+        required
+        placeholder="Enter your password"
+        autocomplete="current-password"
+      >
 
-      <button id="loginButton" type="submit">Log in</button>
+      <button id="loginButton" type="submit">
+        Log in
+      </button>
     </form>
+
     <p id="message" role="status" aria-live="polite"></p>
+    <p class="small">
+      Use the email and password of an account created in Supabase Authentication.
+    </p>
   </section>
 
+
+  <!-- SCHOOL DASHBOARD -->
   <main id="dashboard">
     <h1>School Dashboard</h1>
     <p id="welcome">Welcome</p>
-    <div class="tiles">
-    
-<button type="button"
-  onclick="window.location.href='students.html'">
-  Manage Students
-</button>
-        
 
-<button type="button"
-  onclick="window.location.href='teachers.html'">
-  Manage teachers 
-</button>
-      
-    
-<button type="button"
-  onclick="window.location.href='classes.html'">
-  Manage classes 
-</button>
-    
-<button type="button"
-  onclick="window.location.href='attentance.html'">
-  Manage attetance 
-</button>
-  
-    
-<button type="button"
-  onclick="window.location.href='timetable.html'">
-  Manage timetable 
-</button>
-      
-    
-<button type="button"
-  onclick="window.location.href='subjects.html'">
-  Manage subject 
-</button>
-      
-<button type="button"
-  onclick="window.location.href='results.html'">
-  Manage exam 
-</button>
- and marks.</p></div>
-      
-<button type="button"
-  onclick="window.location.href='fees.html'">
-  Manage payments
-</button>
+    <div class="tiles">
+
+      <div class="tile">
+        <h3>Students</h3>
+        <p>Register and manage students.</p>
+        <button type="button" data-page="students.html">
+          Manage Students
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Teachers</h3>
+        <p>Manage teacher information.</p>
+        <button type="button" data-page="teachers.html">
+          Manage Teachers
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Classes</h3>
+        <p>Manage Grades 1–9.</p>
+        <button type="button" data-page="classes.html">
+          Manage Classes
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Attendance</h3>
+        <p>Record daily attendance.</p>
+        <button type="button" data-page="attendance.html">
+          Manage Attendance
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Timetable</h3>
+        <p>Manage class timetables.</p>
+        <button type="button" data-page="timetable.html">
+          Manage Timetable
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Subjects</h3>
+        <p>Manage school subjects.</p>
+        <button type="button" data-page="subjects.html">
+          Manage Subjects
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Exams and Marks</h3>
+        <p>Manage assessments and results.</p>
+        <button type="button" data-page="results.html">
+          Manage Exams and Marks
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Fees and Payments</h3>
+        <p>Record fees and payments.</p>
+        <button type="button" data-page="fees.html">
+          Manage Payments
+        </button>
+      </div>
+
+      <div class="tile">
+        <h3>Announcements</h3>
+        <p>Publish school announcements.</p>
+        <button type="button" data-page="announcements.html">
+          Manage Announcements
+        </button>
+      </div>
 
     </div>
 
+    <button id="logoutButton" class="logout" type="button">
+      Log out
+    </button>
 
-    <button id="logoutButton">Log out</button>
+    <p id="dashboardMessage" role="status" aria-live="polite"></p>
   </main>
 
+
   <script>
-    // Replace both values with your own Supabase project details.
-    const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+    // YOUR EXISTING SUPABASE PROJECT DETAILS
+    const SUPABASE_URL =
+      "https://apshhzczrofxwjsgenlv.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
 
     const loginSection = document.getElementById("login");
     const dashboard = document.getElementById("dashboard");
     const form = document.getElementById("loginForm");
     const message = document.getElementById("message");
     const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
+    const dashboardMessage =
+      document.getElementById("dashboardMessage");
 
     let client = null;
 
@@ -152,50 +285,83 @@
     function showDashboard(user) {
       loginSection.style.display = "none";
       dashboard.style.display = "block";
+
       document.getElementById("welcome").textContent =
         "Welcome, " + (user.email || "user");
+
+      showMessage("", "");
     }
 
+    function showLogin() {
+      dashboard.style.display = "none";
+      loginSection.style.display = "block";
+      document.getElementById("password").value = "";
+    }
+
+    // Start Supabase and check the existing login session.
     async function startApp() {
       if (!window.supabase) {
-        showMessage("Could not load the Supabase library. Check your internet connection and reload.", "error");
+        showMessage(
+          "Supabase could not load. Check your internet connection and reload the page.",
+          "error"
+        );
         return;
       }
 
-      if (SUPABASE_URL.includes("PASTE_") ||
-          SUPABASE_KEY.includes("PASTE_")) {
-        showMessage("Please add your Supabase Project URL and publishable key in the code.", "error");
+      if (!SUPABASE_URL.startsWith("https://") ||
+          !SUPABASE_KEY) {
+        showMessage(
+          "Check your Supabase Project URL and publishable key.",
+          "error"
+        );
         return;
       }
 
       try {
         client = window.supabase.createClient(
-          SUPABASE_URL, SUPABASE_KEY
+          SUPABASE_URL,
+          SUPABASE_KEY
         );
 
-        const { data, error } = await client.auth.getSession();
-        if (error) throw error;
+        const { data, error } =
+          await client.auth.getSession();
 
-        if (data.session) showDashboard(data.session.user);
+        if (error) {
+          throw error;
+        }
 
-        client.auth.onAuthStateChange((_event, session) => {
-          if (session) {
-            showDashboard(session.user);
-          } else {
-            dashboard.style.display = "none";
-            loginSection.style.display = "block";
+        if (data.session) {
+          showDashboard(data.session.user);
+        }
+
+        client.auth.onAuthStateChange(
+          function(event, session) {
+            if (session) {
+              showDashboard(session.user);
+            } else {
+              showLogin();
+            }
           }
-        });
+        );
+
       } catch (error) {
-        showMessage("Setup error: " + error.message, "error");
+        client = null;
+        showMessage(
+          "Setup error: " + error.message,
+          "error"
+        );
       }
     }
 
+    // Log in using Supabase Authentication.
     form.addEventListener("submit", async function(event) {
       event.preventDefault();
 
       if (!client) {
-        showMessage("Supabase is not configured. Check the URL and publishable key.", "error");
+        showMessage(
+          "Supabase has not started. Reload the page and check your connection.",
+          "error"
+        );
         return;
       }
 
@@ -204,42 +370,81 @@
       showMessage("", "");
 
       try {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
+        const email =
+          document.getElementById("email").value.trim();
 
-        const { data, error } = await client.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
+        const password =
+          document.getElementById("password").value;
 
-        if (error) throw error;
+        const { data, error } =
+          await client.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data.user) {
+          throw new Error(
+            "Login did not return a user. Please try again."
+          );
+        }
 
         showDashboard(data.user);
+
       } catch (error) {
-        showMessage("Login failed: " + error.message, "error");
+        showMessage(
+          "Login failed: " + error.message,
+          "error"
+        );
       } finally {
         loginButton.disabled = false;
         loginButton.textContent = "Log in";
       }
     });
 
-    document.getElementById("logoutButton").addEventListener("click", async function() {
-      const { error } = await client.auth.signOut();
-      if (error) {
-        alert("Could not log out: " + error.message);
+    // Open the selected school management page.
+    document.querySelectorAll("[data-page]").forEach(
+      function(button) {
+        button.addEventListener("click", function() {
+          const page = button.dataset.page;
+          window.location.href = page;
+        });
+      }
+    );
+
+    // Log out.
+    logoutButton.addEventListener("click", async function() {
+      if (!client) {
+        showLogin();
+        return;
+      }
+
+      logoutButton.disabled = true;
+      dashboardMessage.textContent = "";
+
+      try {
+        const { error } = await client.auth.signOut();
+
+        if (error) {
+          throw error;
+        }
+
+        showLogin();
+
+      } catch (error) {
+        dashboardMessage.textContent =
+          "Logout failed: " + error.message;
+      } finally {
+        logoutButton.disabled = false;
       }
     });
 
+    // Run the application.
     startApp();
-    
-;
-  }
-});
-
-
-    
   </script>
-  
+
 </body>
-                                            </html>
-                                            
+</html>
