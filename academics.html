@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academic Management | My School System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b67;color:white;padding:18px}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin:20px 0;box-shadow:0 2px 8px #0001}
+input,select{width:100%;padding:11px;margin:7px 0 13px;border:1px solid #cbd5e1;border-radius:6px}
+button{padding:11px 16px;border:0;border-radius:6px;background:#1266b1;color:white;cursor:pointer;margin:3px}
+.back{background:#475569}
+.danger{background:#dc2626}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{background:#0f766e}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{padding:12px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#eaf2fb}
+#message{font-weight:bold}
+</style>
+</head>
+<body>
+<header>
+<h2>📚 My School System — Academics</h2>
+<p>Manage classes, subjects and academic years</p>
+</header><main>
+<button class="back" onclick="location.href='school-admin.html'">← Back to Dashboard</button><div class="tabs">
+<button onclick="showSection('classes')">Classes / Grades</button>
+<button onclick="showSection('subjects')">Subjects</button>
+<button onclick="showSection('years')">Academic Years</button>
+</div><p id="message" role="status"></p><section class="card" id="classes">
+<h3>Add Class / Grade</h3>
+<form id="classForm">
+<label>Class / Grade Name *</label>
+<input id="className" required placeholder="e.g. Grade 6"><label>Class Teacher</label>
+<input id="classTeacher" placeholder="Teacher's name">
+
+<label>Room / Stream</label>
+<input id="classRoom" placeholder="e.g. East Wing">
+
+<button type="submit">Save Class</button>
+
+</form>
+<h3>Class Records</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Class / Grade</th><th>Class Teacher</th><th>Room / Stream</th><th>Action</th></tr></thead>
+<tbody id="classRows"></tbody>
+</table>
+</div>
+</section><section class="card" id="subjects" hidden>
+<h3>Add Subject</h3>
+<form id="subjectForm">
+<label>Subject Name *</label>
+<input id="subjectName" required placeholder="e.g. Mathematics"><label>Subject Code</label>
+<input id="subjectCode" placeholder="e.g. MAT101">
+
+<label>Class / Grade</label>
+<input id="subjectClass" placeholder="e.g. Grade 6">
+
+<button type="submit">Save Subject</button>
+
+</form>
+<h3>Subject Records</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Subject</th><th>Code</th><th>Class / Grade</th><th>Action</th></tr></thead>
+<tbody id="subjectRows"></tbody>
+</table>
+</div>
+</section><section class="card" id="years" hidden>
+<h3>Add Academic Year</h3>
+<form id="yearForm">
+<label>Academic Year *</label>
+<input id="yearName" required placeholder="e.g. 2027"><label>Start Date</label>
+<input id="yearStart" type="date">
+
+<label>End Date</label>
+<input id="yearEnd" type="date">
+
+<button type="submit">Save Academic Year</button>
+
+</form>
+<h3>Academic Year Records</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Year</th><th>Start Date</th><th>End Date</th><th>Action</th></tr></thead>
+<tbody id="yearRows"></tbody>
+</table>
+</div>
+</section>
+</main><script>
+const KEYS = {
+  classes:"mySchoolClasses",
+  subjects:"mySchoolSubjects",
+  years:"mySchoolYears"
+};
+
+function read(key){
+  try{return JSON.parse(localStorage.getItem(key)) || []}
+  catch{return []}
+}
+
+function write(key,records){
+  localStorage.setItem(key,JSON.stringify(records));
+}
+
+function showSection(id){
+  ["classes","subjects","years"].forEach(sectionId=>{
+    document.getElementById(sectionId).hidden = sectionId !== id;
+  });
+}
+
+function message(text,error=false){
+  const el=document.getElementById("message");
+  el.textContent=text;
+  el.style.color=error?"#dc2626":"#15803d";
+}
+
+function renderTable(key,bodyId,fields){
+  const tbody=document.getElementById(bodyId);
+  tbody.innerHTML="";
+  read(key).forEach((record,index)=>{
+    const tr=document.createElement("tr");
+    fields.forEach(field=>{
+      const td=document.createElement("td");
+      td.textContent=record[field] || "—";
+      tr.appendChild(td);
+    });
+    const action=document.createElement("td");
+    const btn=document.createElement("button");
+    btn.textContent="Delete";
+    btn.className="danger";
+    btn.onclick=()=>{
+      if(!confirm("Delete this record?"))return;
+      const records=read(key);
+      records.splice(index,1);
+      write(key,records);
+      refresh();
+      message("Record deleted.");
+    };
+    action.appendChild(btn);
+    tr.appendChild(action);
+    tbody.appendChild(tr);
+  });
+}
+
+function refresh(){
+  renderTable(KEYS.classes,"classRows",["name","teacher","room"]);
+  renderTable(KEYS.subjects,"subjectRows",["name","code","className"]);
+  renderTable(KEYS.years,"yearRows",["name","start","end"]);
+}
+
+document.getElementById("classForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const records=read(KEYS.classes);
+  const name=document.getElementById("className").value.trim();
+  if(records.some(r=>r.name.toLowerCase()===name.toLowerCase())){
+    message("That class already exists.",true);return;
+  }
+  records.push({
+    name,
+    teacher:document.getElementById("classTeacher").value.trim(),
+    room:document.getElementById("classRoom").value.trim()
+  });
+  write(KEYS.classes,records);
+  e.target.reset();refresh();message("Class saved successfully.");
+});
+
+document.getElementById("subjectForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const records=read(KEYS.subjects);
+  const name=document.getElementById("subjectName").value.trim();
+  const code=document.getElementById("subjectCode").value.trim();
+  if(records.some(r=>r.name.toLowerCase()===name.toLowerCase() && r.className.toLowerCase()===document.getElementById("subjectClass").value.trim().toLowerCase())){
+    message("This subject is already registered for that class.",true);return;
+  }
+  records.push({
+    name,code,
+    className:document.getElementById("subjectClass").value.trim()
+  });
+  write(KEYS.subjects,records);
+  e.target.reset();refresh();message("Subject saved successfully.");
+});
+
+document.getElementById("yearForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const records=read(KEYS.years);
+  const name=document.getElementById("yearName").value.trim();
+  if(records.some(r=>r.name.toLowerCase()===name.toLowerCase())){
+    message("That academic year already exists.",true);return;
+  }
+  records.push({
+    name,
+    start:document.getElementById("yearStart").value,
+    end:document.getElementById("yearEnd").value
+  });
+  write(KEYS.years,records);
+  e.target.reset();refresh();message("Academic year saved successfully.");
+});
+
+refresh();
+</script></body>
+  </html>
