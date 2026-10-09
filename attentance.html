@@ -1,257 +1,178 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attendance Management</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    body { margin:0; font-family:Arial,sans-serif; background:#f1f5f9; color:#1e293b; }
-    header { background:#123b70; color:white; padding:18px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-    main { max-width:1000px; margin:24px auto; padding:0 14px; }
-    .card { background:white; padding:20px; border-radius:10px; margin-bottom:20px; }
-    h2 { color:#123b70; }
-    label { display:block; font-weight:bold; margin:10px 0 6px; }
-    input,select { width:100%; padding:11px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box; }
-    button { padding:10px 14px; border:0; border-radius:6px; cursor:pointer; margin:4px; font-weight:bold; }
-    .primary { background:#1763c6; color:white; }
-    .secondary { background:#475569; color:white; }
-    .danger { background:#dc2626; color:white; }
-    .success { background:#15803d; color:white; }
-    .msg { padding:12px; margin:10px 0; border-radius:6px; overflow-wrap:anywhere; }
-    .tablewrap { overflow-x:auto; margin-top:15px; }
-    table { width:100%; border-collapse:collapse; min-width:500px; }
-    th,td { padding:11px; border-bottom:1px solid #ddd; text-align:left; }
-    th { background:#eaf1fb; }
-    .hidden { display:none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance | My School System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b67;color:white;padding:18px}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin:20px 0;box-shadow:0 2px 8px #0001}
+input,select{padding:10px;border:1px solid #cbd5e1;border-radius:6px;margin:6px 0 12px;width:100%}
+button{padding:10px 15px;border:0;border-radius:6px;background:#1266b1;color:white;cursor:pointer;margin:3px}
+.back{background:#475569}
+.danger{background:#dc2626}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{padding:12px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#eaf2fb}
+#message{font-weight:bold}
+</style>
 </head>
 <body>
 <header>
-  <h1>Student Attendance</h1>
-  <div>
-    <button class="secondary" id="dashboardBtn">Dashboard</button>
-    <button class="danger" id="logoutBtn">Log Out</button>
-  </div>
-</header>
+<h2>📅 My School System — Attendance</h2>
+<p>Record and manage daily student attendance</p>
+</header><main>
+<button class="back" onclick="location.href='school-admin.html'">← Back to Dashboard</button><section class="card">
+<h3>Record Attendance</h3>
+<form id="attendanceForm">
+<label>Admission Number *</label>
+<input id="admission" required placeholder="Enter student admission number"><label>Student Name *</label>
+<input id="studentName" required placeholder="Enter student full name">
 
-<main>
-  <div id="message" role="status"></div>
+<label>Class / Grade *</label>
+<input id="className" required placeholder="e.g. Grade 6">
 
-  <section class="card">
-    <h2>Record Attendance</h2>
+<label>Attendance Date *</label>
+<input id="attendanceDate" type="date" required>
 
-    <label for="attendanceDate">Date</label>
-    <input type="date" id="attendanceDate">
+<label>Status *</label>
+<select id="status" required>
 
-    <label for="classSelect">Class</label>
-    <select id="classSelect">
-      <option value="">Loading classes...</option>
-    </select>
+<option value="Present">Present</option>
+<option value="Absent">Absent</option>
+<option value="Late">Late</option>
+<option value="Excused">Excused</option>
+</select><label>Remarks</label>
+<input id="remarks" placeholder="Optional remarks">
 
-    <button class="primary" id="loadBtn">Load Students</button>
-    <button class="secondary" id="allPresentBtn">Mark All Present</button>
+<button type="submit">Save Attendance</button>
+<button type="reset" class="back">Clear Form</button>
 
-    <div id="studentList" class="tablewrap"></div>
-    <button class="success" id="saveBtn" disabled>Save Attendance</button>
-  </section>
+</form>
+<p id="message" role="status"></p>
+</section><section class="card">
+<h3>Attendance Records</h3>
+<label>Filter by date</label>
+<input type="date" id="filterDate" oninput="displayRecords()"><label>Search student or class</label>
+<input id="search" placeholder="Enter name, admission number or class" oninput="displayRecords()">
 
-  <section class="card">
-    <h2>Attendance Report</h2>
-    <label for="reportDate">Report date</label>
-    <input type="date" id="reportDate">
-    <button class="primary" id="reportBtn">View Report</button>
-    <div id="reportTable" class="tablewrap"></div>
-  </section>
-</main>
+<p id="summary">Records: 0</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Admission No.</th>
+<th>Student Name</th>
+<th>Class</th>
+<th>Status</th>
+<th>Remarks</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="attendanceRows"></tbody>
+</table>
+</div>
+</section>
+</main><script>
+const STORAGE_KEY = "mySchoolAttendance";
 
-<script>
-const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
-const SUPABASE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const message = document.getElementById("message");
-const classSelect = document.getElementById("classSelect");
-const studentList = document.getElementById("studentList");
-const saveBtn = document.getElementById("saveBtn");
-let students = [];
-
-function showMessage(text, ok=false) {
-  message.textContent = text;
-  message.style.background = ok ? "#dcfce7" : "#fee2e2";
-  message.style.color = ok ? "#166534" : "#991b1b";
-  message.style.padding = "12px";
+function getRecords(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []}
+  catch{return []}
 }
 
-function today() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
+function displayRecords(){
+  const filterDate=document.getElementById("filterDate").value;
+  const query=document.getElementById("search").value.toLowerCase();
 
-document.getElementById("attendanceDate").value = today();
-document.getElementById("reportDate").value = today();
-
-async function start() {
-  const {data,error} = await client.auth.getSession();
-  if (error) return showMessage(error.message);
-  if (!data.session) {
-    location.replace("index.html");
-    return;
-  }
-
-  const {data:classes,error:classError} = await client
-    .from("classes").select("id,class_name").order("class_name");
-
-  if (classError) return showMessage(classError.message);
-
-  classSelect.replaceChildren(new Option("Choose a class",""));
-  (classes || []).forEach(c => classSelect.add(new Option(c.class_name,c.id)));
-}
-
-async function loadStudents() {
-  studentList.replaceChildren();
-  saveBtn.disabled = true;
-
-  if (!classSelect.value) return showMessage("Choose a class first.");
-
-  const date = document.getElementById("attendanceDate").value;
-  if (!date) return showMessage("Choose the attendance date.");
-
-  const {data,error} = await client
-    .from("students")
-    .select("id,admission_number,first_name,last_name")
-    .eq("class_id",Number(classSelect.value))
-    .order("first_name");
-
-  if (error) return showMessage(error.message);
-
-  students = data || [];
-  if (!students.length) {
-    studentList.textContent = "No students found in this class.";
-    return;
-  }
-
-  const {data:existing,error:attendanceError} = await client
-    .from("attendance")
-    .select("student_id,status")
-    .eq("attendance_date",date)
-    .in("student_id",students.map(s => s.id));
-
-  if (attendanceError) return showMessage(attendanceError.message);
-
-  const statuses = new Map((existing || []).map(a => [String(a.student_id),a.status]));
-  const table = document.createElement("table");
-  table.innerHTML = "<thead><tr><th>Admission No.</th><th>Student</th><th>Status</th></tr></thead>";
-  const tbody = document.createElement("tbody");
-
-  students.forEach(s => {
-    const tr = document.createElement("tr");
-    const admission = document.createElement("td");
-    admission.textContent = s.admission_number || "";
-    const name = document.createElement("td");
-    name.textContent = `${s.first_name} ${s.last_name}`;
-    const statusCell = document.createElement("td");
-    const select = document.createElement("select");
-    select.dataset.studentId = s.id;
-
-    ["present","absent","late"].forEach(status => {
-      select.add(new Option(status.charAt(0).toUpperCase()+status.slice(1),status));
-    });
-    select.value = statuses.get(String(s.id)) || "present";
-    statusCell.appendChild(select);
-    tr.append(admission,name,statusCell);
-    tbody.appendChild(tr);
+  const records=getRecords().filter(r=>{
+    const matchesDate=!filterDate || r.date===filterDate;
+    const matchesSearch=[r.admission,r.studentName,r.className]
+      .some(v=>(v||"").toLowerCase().includes(query));
+    return matchesDate && matchesSearch;
   });
 
-  table.appendChild(tbody);
-  studentList.appendChild(table);
-  saveBtn.disabled = false;
-}
+  const present=records.filter(r=>r.status==="Present").length;
+  const absent=records.filter(r=>r.status==="Absent").length;
+  const late=records.filter(r=>r.status==="Late").length;
 
-async function saveAttendance() {
-  const date = document.getElementById("attendanceDate").value;
-  const records = Array.from(
-    studentList.querySelectorAll("select[data-student-id]")
-  ).map(s => ({
-    student_id: Number(s.dataset.studentId),
-    attendance_date: date,
-    status: s.value
-  }));
+  document.getElementById("summary").textContent =
+    `Records: ${records.length} | Present: ${present} | Absent: ${absent} | Late: ${late}`;
 
-  if (!records.length) return showMessage("Load students first.");
+  const tbody=document.getElementById("attendanceRows");
+  tbody.innerHTML="";
 
-  saveBtn.disabled = true;
-  const {error} = await client
-    .from("attendance")
-    .upsert(records,{onConflict:"student_id,attendance_date"});
-  saveBtn.disabled = false;
-
-  if (error) return showMessage(error.message);
-  showMessage("Attendance saved successfully.",true);
-}
-
-async function viewReport() {
-  const date = document.getElementById("reportDate").value;
-  const report = document.getElementById("reportTable");
-  report.textContent = "Loading report...";
-
-  const {data,error} = await client
-    .from("attendance")
-    .select("attendance_date,status,students(admission_number,first_name,last_name,classes(class_name))")
-    .eq("attendance_date",date);
-
-  if (error) {
-    report.textContent = "";
-    return showMessage(error.message);
-  }
-
-  report.replaceChildren();
-  if (!data || !data.length) {
-    report.textContent = "No attendance records found for this date.";
-    return;
-  }
-
-  const table = document.createElement("table");
-  table.innerHTML = "<thead><tr><th>Class</th><th>Admission No.</th><th>Student</th><th>Status</th></tr></thead>";
-  const tbody = document.createElement("tbody");
-
-  data.forEach(a => {
-    const s = a.students || {};
-    const tr = document.createElement("tr");
-    [
-      s.classes?.class_name || "",
-      s.admission_number || "",
-      `${s.first_name || ""} ${s.last_name || ""}`,
-      a.status
-    ].forEach(value => {
-      const td = document.createElement("td");
-      td.textContent = value;
+  records.forEach(record=>{
+    const tr=document.createElement("tr");
+    [record.date,record.admission,record.studentName,record.className,
+     record.status,record.remarks].forEach(value=>{
+      const td=document.createElement("td");
+      td.textContent=value||"—";
       tr.appendChild(td);
     });
+
+    const action=document.createElement("td");
+    const btn=document.createElement("button");
+    btn.textContent="Delete";
+    btn.className="danger";
+    btn.onclick=()=>deleteRecord(record.id);
+    action.appendChild(btn);
+    tr.appendChild(action);
     tbody.appendChild(tr);
   });
-
-  table.appendChild(tbody);
-  report.appendChild(table); of
 }
 
-document.getElementById("loadBtn").addEventListener("click",loadStudents);
-document.getElementById("saveBtn").addEventListener("click",saveAttendance);
-document.getElementById("reportBtn").addEventListener("click",viewReport);
-document.getElementById("allPresentBtn").addEventListener("click",() => {
-  studentList.querySelectorAll("select[data-student-id]").forEach(s => s.value="present");
-});
-document.getElementById("dashboardBtn").addEventListener("click",() => location.href="index.html");
-document.getElementById("logoutBtn").addEventListener("click",async() => {
-  if (!confirm("Log out?")) return;
-  const {error} = await client.auth.signOut();
-  if (error) return showMessage(error.message);
-  location.replace("index.html");
+document.getElementById("attendanceForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const record={
+    id:Date.now().toString(),
+    admission:document.getElementById("admission").value.trim(),
+    studentName:document.getElementById("studentName").value.trim(),
+    className:document.getElementById("className").value.trim(),
+    date:document.getElementById("attendanceDate").value,
+    status:document.getElementById("status").value,
+    remarks:document.getElementById("remarks").value.trim()
+  };
+
+  const records=getRecords();
+  const duplicate=records.some(r=>
+    r.admission.toLowerCase()===record.admission.toLowerCase() &&
+    r.date===record.date
+  );
+
+  if(duplicate){
+    showMessage("Attendance has already been recorded for this student on this date.",true);
+    return;
+  }
+
+  records.push(record);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(records));
+  this.reset();
+  document.getElementById("attendanceDate").value=new Date().toISOString().slice(0,10);
+  showMessage("Attendance saved successfully in this browser.",false);
+  displayRecords();
 });
 
-start();
-</script>
-</body>
+function deleteRecord(id){
+  if(!confirm("Delete this attendance record?"))return;
+  const records=getRecords().filter(r=>r.id!==id);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(records));
+  displayRecords();
+  showMessage("Attendance record deleted.",false);
+}
+
+function showMessage(text,error){
+  const el=document.getElementById("message");
+  el.textContent=text;
+  el.style.color=error?"#dc2626":"#15803d";
+}
+
+document.getElementById("attendanceDate").value=new Date().toISOString().slice(0,10);
+displayRecords();
+</script></body>
 </html>
