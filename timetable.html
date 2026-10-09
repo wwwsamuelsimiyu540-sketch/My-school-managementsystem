@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class Timetable</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f1f5f9;color:#1e293b}
+header{background:#123b70;color:white;padding:18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+main{max-width:1000px;margin:25px auto;padding:0 14px}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px}
+h2{color:#123b70}label{display:block;font-weight:bold;margin:10px 0 6px}
+input,select{width:100%;padding:11px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+button{padding:10px 14px;border:0;border-radius:6px;cursor:pointer;margin:4px;font-weight:bold}
+.primary{background:#1763c6;color:white}.secondary{background:#475569;color:white}.danger{background:#dc2626;color:white}
+#message{padding:10px;margin:10px 0;overflow-wrap:anywhere}
+.tablewrap{overflow-x:auto;margin-top:15px}table{width:100%;border-collapse:collapse;min-width:600px}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}th{background:#eaf1fb}
+</style>
+</head>
+<body>
+<header>
+<h1>Class Timetable</h1>
+<div>
+<button id="dashboardBtn" class="secondary">Dashboard</button>
+<button id="logoutBtn" class="danger">Log Out</button>
+</div>
+</header>
+<main>
+<div id="message" role="status"></div>
+
+<section class="card">
+<h2>Add Timetable Entry</h2>
+<form id="timetableForm">
+<div class="grid">
+<div><label for="classSelect">Class</label><select id="classSelect" required><option value="">Loading classes...</option></select></div>
+<div><label for="subjectSelect">Subject</label><select id="subjectSelect" required><option value="">Loading subjects...</option></select></div>
+<div>
+<label for="daySelect">Day of Week</label>
+<select id="daySelect" required>
+<option value="">Choose day</option>
+<option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+<option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+</select>
+</div>
+<div><label for="startTime">Start Time</label><input id="startTime" type="time" required></div>
+<div><label for="endTime">End Time</label><input id="endTime" type="time" required></div>
+</div>
+<button id="saveBtn" type="submit" class="primary">Add Lesson</button>
+</form>
+</section>
+
+<section class="card">
+<h2>View Timetable</h2>
+<div class="grid">
+<div><label for="filterClass">Filter by Class</label><select id="filterClass"><option value="">All classes</option></select></div>
+<div>
+<label for="filterDay">Filter by Day</label>
+<select id="filterDay">
+<option value="">All days</option>
+<option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+<option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+</select>
+</div>
+</div>
+<button id="refreshBtn" class="primary">Refresh Timetable</button>
+<div id="timetableTable" class="tablewrap">Loading timetable...</div>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL="https://apshhzczrofxwjsgenlv.supabase.co";
+const SUPABASE_KEY="sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const message=document.getElementById("message");
+const classSelect=document.getElementById("classSelect");
+const subjectSelect=document.getElementById("subjectSelect");
+const filterClass=document.getElementById("filterClass");
+const filterDay=document.getElementById("filterDay");
+const tableWrap=document.getElementById("timetableTable");
+let entries=[];
+
+function showMessage(text,ok=false){
+ message.textContent=text;
+ message.style.background=ok?"#dcfce7":"#fee2e2";
+ message.style.color=ok?"#166534":"#991b1b";
+}
+
+async function start(){
+ const {data,error}=await client.auth.getSession();
+ if(error){showMessage(error.message);return;}
+ if(!data.session){location.replace("index.html");return;}
+
+ const [classes,subjects]=await Promise.all([
+  client.from("classes").select("id,class_name").order("class_name"),
+  client.from("subjects").select("id,subject_name").order("subject_name")
+ ]);
+ if(classes.error||subjects.error){showMessage((classes.error||subjects.error).message);return;}
+
+ classSelect.replaceChildren(new Option("Choose class",""));
+ filterClass.replaceChildren(new Option("All classes",""));
+ subjectSelect.replaceChildren(new Option("Choose subject",""));
+
+ classes.data.forEach(c=>{
+  classSelect.add(new Option(c.class_name,c.id));
+  filterClass.add(new Option(c.class_name,c.id));
+ });
+ subjects.data.forEach(s=>subjectSelect.add(new Option(s.subject_name,s.id)));
+ await loadTimetable();
+}
+
+function displayTime(value){return value?value.slice(0,5):"";}
+
+async function loadTimetable(){
+ tableWrap.textContent="Loading timetable...";
+ const {data,error}=await client.from("timetable")
+  .select("id,class_id,subject_id,day_of_week,start_time,end_time,classes(class_name),subjects(subject_name)")
+  .order("start_time");
+
+ if(error){showMessage(error.message);return;}
+ entries=data||[];
+ renderTimetable();
+}
+
+function renderTimetable(){
+ const rows=entries.filter(e=>
+  (!filterClass.value||String(e.class_id)===filterClass.value)&&
+  (!filterDay.value||e.day_of_week===filterDay.value)
+ );
+
+ tableWrap.replaceChildren();
+ if(!rows.length){tableWrap.textContent="No timetable entries found.";return;}
+
+ const table=document.createElement("table");
+ table.innerHTML="<thead><tr><th>Class</th><th>Subject</th><th>Day</th><th>Start</th><th>End</th><th>Action</th></tr></thead>";
+ const tbody=document.createElement("tbody");
+
+ rows.forEach(e=>{
+  const tr=document.createElement("tr");
+  [
+   e.classes?.class_name||"",
+   e.subjects?.subject_name||"",
+   e.day_of_week,
+   displayTime(e.start_time),
+   displayTime(e.end_time)
+  ].forEach(value=>{
+   const td=document.createElement("td");
+   td.textContent=value||"—";
+   tr.appendChild(td);
+  });
+
+  const action=document.createElement("td");
+  const btn=document.createElement("button");
+  btn.className="danger";btn.textContent="Delete";
+  btn.addEventListener("click",()=>deleteEntry(e));
+  action.appendChild(btn);tr.appendChild(action);tbody.appendChild(tr);
+ });
+
+ table.appendChild(tbody);
+ tableWrap.appendChild(table);
+}
+
+document.getElementById("timetableForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+
+ const startTime=document.getElementById("startTime").value;
+ const endTime=document.getElementById("endTime").value;
+ if(startTime>=endTime)return showMessage("End time must be later than start time.");
+
+ const record={
+  class_id:Number(classSelect.value),
+  subject_id:Number(subjectSelect.value),
+  day_of_week:document.getElementById("daySelect").value,
+  start_time:startTime,
+  end_time:endTime
+ };
+
+ const btn=document.getElementById("saveBtn");
+ btn.disabled=true;
+ const {error}=await client.from("timetable").insert([record]);
+ btn.disabled=false;
+
+ if(error){showMessage(error.message);return;}
+ e.target.reset();
+ showMessage("Timetable entry added successfully.",true);
+ await loadTimetable();
+});
+
+async function deleteEntry(entry){
+ if(!confirm("Delete this timetable entry?"))return;
+
+ const {data,error}=await client.from("timetable")
+  .delete().eq("id",entry.id).select("id");
+
+ if(error){showMessage(error.message);return;}
+ if(!data?.length)return showMessage("Entry not deleted. Check your permissions.");
+
+ showMessage("Timetable entry deleted.",true);
+ await loadTimetable();
+}
+
+filterClass.addEventListener("change",renderTimetable);
+filterDay.addEventListener("change",renderTimetable);
+document.getElementById("refreshBtn").addEventListener("click",loadTimetable);
+document.getElementById("dashboardBtn").addEventListener("click",()=>location.href="index.html");
+document.getElementById("logoutBtn").addEventListener("click",async()=>{
+ if(!confirm("Log out?"))return;
+ const {error}=await client.auth.signOut();
+ if(error){showMessage(error.message);return;}
+ location.replace("index.html");
+});
+start();
+</script>
+</body>
+  </html>
+  
