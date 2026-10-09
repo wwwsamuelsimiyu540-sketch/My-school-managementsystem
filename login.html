@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My School System | Login</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef2f7;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      padding: 30px;
+      border-radius: 14px;
+      box-shadow: 0 5px 25px #00000015;
+    }
+
+    h1 {
+      color: #123b70;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #667085;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #ccd3dd;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 22px;
+      border: none;
+      border-radius: 7px;
+      background: #123b70;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #message {
+      margin-top: 18px;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="login-box">
+    <h1>My School System</h1>
+    <p class="subtitle">Sign in to your account</p>
+
+    <form id="loginForm">
+      <label for="email">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        autocomplete="username"
+        required
+      >
+
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button id="loginButton" type="submit">Sign In</button>
+    </form>
+
+    <p id="message" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // Replace these placeholders with your Supabase project details.
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_PUBLISHABLE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+
+    const message = document.getElementById("message");
+    const button = document.getElementById("loginButton");
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    document.getElementById("loginForm").addEventListener(
+      "submit",
+      async function (event) {
+        event.preventDefault();
+
+        button.disabled = true;
+        message.textContent = "Signing in...";
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+          const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+              email,
+              password
+            });
+
+          if (error) throw error;
+
+          const { data: profile, error: profileError } =
+            await supabaseClient
+              .from("user_profiles")
+              .select("full_name, role, school_id")
+              .eq("id", data.user.id)
+              .maybeSingle();
+
+          if (profileError) {
+            throw new Error(
+              "Could not load your profile. Check your database permissions."
+            );
+          }
+
+          if (!profile) {
+            await supabaseClient.auth.signOut();
+            throw new Error(
+              "Your account has no system profile. Contact the platform developer."
+            );
+          }
+
+          message.textContent =
+            "Login successful. Role: " + profile.role;
+
+          if (profile.role === "platform_developer") {
+            message.textContent +=
+              " Your developer dashboard is the next page we will build.";
+          } else if (profile.role === "school_admin") {
+            if (!profile.school_id) {
+              throw new Error("Your account is not assigned to a school.");
+            }
+
+            window.location.href = "school-admin.html";
+            return;
+          } else {
+            message.textContent +=
+              ". Your role-specific dashboard is not configured yet.";
+          }
+        } catch (error) {
+          message.textContent = error.message;
+        } finally {
+          button.disabled = false;
+        }
+      }
+    );
+  </script>
+</body>
+</html>
