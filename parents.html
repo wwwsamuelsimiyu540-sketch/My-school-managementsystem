@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parents & Guardians | My School System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b67;color:white;padding:18px}
+main{max-width:1100px;margin:25px auto;padding:15px}
+.card{background:white;padding:20px;border-radius:12px;margin:20px 0;box-shadow:0 2px 8px #0001}
+input,select{width:100%;padding:11px;margin:7px 0 13px;border:1px solid #cbd5e1;border-radius:6px}
+button{padding:11px 16px;border:0;border-radius:6px;background:#1266b1;color:white;cursor:pointer;margin:3px}
+.back{background:#475569}
+.danger{background:#dc2626}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:750px}
+th,td{padding:12px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#eaf2fb}
+#message{font-weight:bold}
+</style>
+</head>
+<body>
+<header>
+<h2>👨‍👩‍👧 My School System — Parents & Guardians</h2>
+<p>Manage parent contacts and student relationships</p>
+</header><main>
+<button class="back" onclick="location.href='school-admin.html'">← Back to Dashboard</button><section class="card">
+<h3>Register Parent / Guardian</h3>
+<form id="parentForm">
+<label>Parent ID *</label>
+<input id="parentId" required placeholder="e.g. PAR001"><label>Full Name *</label>
+<input id="fullName" required placeholder="Parent or guardian's full name">
+
+<label>Phone Number *</label>
+<input id="phone" type="tel" required placeholder="e.g. 07XXXXXXXX">
+
+<label>Email Address</label>
+<input id="email" type="email" placeholder="parent@example.com">
+
+<label>Relationship to Student</label>
+<select id="relationship">
+
+<option>Parent</option>
+<option>Mother</option>
+<option>Father</option>
+<option>Guardian</option>
+<option>Other</option>
+</select><label>Student Admission Number</label>
+<input id="admission" placeholder="e.g. ADM001">
+
+<label>Occupation</label>
+<input id="occupation" placeholder="Optional">
+
+<label>Address</label>
+<input id="address" placeholder="Home address or area">
+
+<button type="submit">Save Parent</button>
+<button type="reset" class="back">Clear Form</button>
+
+</form>
+<p id="message" role="status"></p>
+</section><section class="card">
+<h3>Parent / Guardian Records</h3>
+<input id="search" placeholder="Search by ID, name, phone or admission number..." oninput="displayParents()">
+<p id="count">Parents: 0</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Parent ID</th>
+<th>Full Name</th>
+<th>Phone</th>
+<th>Email</th>
+<th>Relationship</th>
+<th>Student Admission No.</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="parentRows"></tbody>
+</table>
+</div>
+</section>
+</main><script>
+const STORAGE_KEY = "mySchoolParents";
+
+function getParents(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []}
+  catch{return []}
+}
+
+function displayParents(){
+  const query=document.getElementById("search").value.toLowerCase();
+
+  const parents=getParents().filter(p=>
+    [p.parentId,p.fullName,p.phone,p.admission].some(value=>
+      (value||"").toLowerCase().includes(query)
+    )
+  );
+
+  document.getElementById("count").textContent="Parents shown: "+parents.length;
+
+  const tbody=document.getElementById("parentRows");
+  tbody.innerHTML="";
+
+  parents.forEach(parent=>{
+    const tr=document.createElement("tr");
+
+    [
+      parent.parentId,parent.fullName,parent.phone,parent.email,
+      parent.relationship,parent.admission
+    ].forEach(value=>{
+      const td=document.createElement("td");
+      td.textContent=value||"—";
+      tr.appendChild(td);
+    });
+
+    const actions=document.createElement("td");
+    const btn=document.createElement("button");
+    btn.textContent="Delete";
+    btn.className="danger";
+    btn.onclick=()=>deleteParent(parent.parentId);
+    actions.appendChild(btn);
+    tr.appendChild(actions);
+
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("parentForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const parent={
+    parentId:document.getElementById("parentId").value.trim(),
+    fullName:document.getElementById("fullName").value.trim(),
+    phone:document.getElementById("phone").value.trim(),
+    email:document.getElementById("email").value.trim(),
+    relationship:document.getElementById("relationship").value,
+    admission:document.getElementById("admission").value.trim(),
+    occupation:document.getElementById("occupation").value.trim(),
+    address:document.getElementById("address").value.trim()
+  };
+
+  const parents=getParents();
+
+  if(parents.some(p=>p.parentId.toLowerCase()===parent.parentId.toLowerCase())){
+    showMessage("That Parent ID already exists.",true);
+    return;
+  }
+
+  parents.push(parent);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(parents));
+
+  this.reset();
+  showMessage("Parent record saved in this browser.",false);
+  displayParents();
+});
+
+function deleteParent(id){
+  if(!confirm("Delete this parent record?"))return;
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(getParents().filter(p=>p.parentId!==id))
+  );
+
+  displayParents();
+  showMessage("Parent record deleted.",false);
+}
+
+function showMessage(text,error){
+  const el=document.getElementById("message");
+  el.textContent=text;
+  el.style.color=error?"#dc2626":"#15803d";
+}
+
+displayParents();
+</script></body>
+</html>
