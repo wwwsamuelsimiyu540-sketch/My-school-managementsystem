@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register School</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #172033;
+    }
+
+    main {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 5px 24px #0001;
+    }
+
+    h1 { color: #174ea6; }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+
+    input:not([type="checkbox"]) {
+      width: 100%;
+      padding: 12px;
+      margin-top: 7px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+
+    .level {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .level label {
+      margin: 0;
+      font-weight: normal;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 7px;
+      background: #174ea6;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+    }
+
+    #message {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .error { color: #b91c1c; }
+    .success { color: #166534; }
+
+    a { color: #174ea6; }
+  </style>
+</head>
+
+<body>
+<main>
+  <h1>Register a School</h1>
+  <p>Register your school and select the levels it offers.</p>
+
+  <form id="schoolForm">
+    <label for="schoolName">School name</label>
+    <input id="schoolName" required maxlength="150"
+           placeholder="Enter school name">
+
+    <label for="schoolCode">Unique school code</label>
+    <input id="schoolCode" required maxlength="30"
+           pattern="[A-Za-z0-9-]+"
+           placeholder="For example, SCH-0001">
+    <small>Use a unique code containing letters, numbers or hyphens.</small>
+
+    <label for="county">County or region</label>
+    <input id="county" maxlength="100"
+           placeholder="Enter county or region">
+
+    <label>School level(s)</label>
+
+    <div class="level">
+      <input type="checkbox" id="primary" value="primary">
+      <label for="primary">Primary School (Grades 1–6)</label>
+    </div>
+
+    <div class="level">
+      <input type="checkbox" id="junior" value="junior">
+      <label for="junior">Junior School (Grades 7–9)</label>
+    </div>
+
+    <div class="level">
+      <input type="checkbox" id="senior" value="senior">
+      <label for="senior">Senior School (Grades 10–12)</label>
+    </div>
+
+    <button id="registerButton" type="submit">
+      Register School
+    </button>
+  </form>
+
+  <p id="message" role="status" aria-live="polite"></p>
+  <p><a href="index.html">Return to main login</a></p>
+</main>
+
+<script>
+  const SUPABASE_URL =
+    "https://apshhzczrofxwjsgenlv.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+  const client = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  const form = document.getElementById("schoolForm");
+  const message = document.getElementById("message");
+  const button = document.getElementById("registerButton");
+
+  function showMessage(text, type) {
+    message.textContent = text;
+    message.className = type || "";
+  }
+
+  async function checkLogin() {
+    try {
+      const { data, error } = await client.auth.getSession();
+
+      if (error) throw error;
+
+      if (!data.session) {
+        window.location.replace("index.html");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      showMessage("Login check failed: " + error.message, "error");
+      return false;
+    }
+  }
+
+  form.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const loggedIn = await checkLogin();
+    if (!loggedIn) return;
+
+    const levels = ["primary", "junior", "senior"]
+      .filter(level => document.getElementById(level).checked);
+
+    if (levels.length === 0) {
+      showMessage("Select at least one school level.", "error");
+      return;
+    }
+
+    const schoolName =
+      document.getElementById("schoolName").value.trim();
+
+    const schoolCode =
+      document.getElementById("schoolCode").value.trim().toUpperCase();
+
+    const county =
+      document.getElementById("county").value.trim();
+
+    button.disabled = true;
+    button.textContent = "Registering...";
+    showMessage("", "");
+
+    try {
+      const { data: sessionData, error: sessionError } =
+        await client.auth.getSession();
+
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        throw new Error("Please log in again.");
+      }
+
+      const user = sessionData.session.user;
+
+      // Create the school under the signed-in user.
+      const { data: school, error: schoolError } = await client
+        .from("schools")
+        .insert({
+          school_name: schoolName,
+          school_code: schoolCode,
+          county: county || null,
+          levels: levels,
+          created_by: user.id
+        })
+        .select("id, school_name, school_code")
+        .single();
+
+      if (schoolError) throw schoolError;
+
+      // Make the registering user the first school administrator.
+      const { error: memberError } = await client
+        .from("school_members")
+        .insert({
+          school_id: school.id,
+          user_id: user.id,
+          role: "school_admin"
+        });
+
+      if (memberError) {
+        showMessage(
+          "The school was created, but administrator membership could not be saved. " +
+          "School code: " + school.school_code +
+          ". Details: " + memberError.message,
+          "error"
+        );
+        return;
+      }
+
+      showMessage(
+        "School registered successfully!\n" +
+        "School: " + school.school_name + "\n" +
+        "Code: " + school.school_code + "\n" +
+        "Levels: " + levels.join(", ") + "\n\n" +
+        "You are the first school administrator. The next step is to open your school dashboard.",
+        "success"
+      );
+
+      form.reset();
+
+    } catch (error) {
+      showMessage(
+        "Registration failed: " + error.message,
+        "error"
+      );
+    } finally {
+      button.disabled = false;
+      button.textContent = "Register School";
+    }
+  });
+
+  checkLogin();
+</script>
+</body>
+  </html>
+      
