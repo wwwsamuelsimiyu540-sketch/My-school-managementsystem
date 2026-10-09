@@ -406,10 +406,11 @@ if (roleError) {
     "Could not check developer access: " + roleError.message
   );
 }
-
 if (developer) {
-  window.location.href = "developer.html";
+  alert("Developer login successful! Opening developer interface...");
+  window.location.href = "./developer.html";
 } else {
+  alert("Login successful, but this account is not registered as a developer.");
   showDashboard(data.user);
 }
 
