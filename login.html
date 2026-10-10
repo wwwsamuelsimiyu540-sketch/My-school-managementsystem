@@ -1,195 +1,91 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My School System | Login</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #eef2f7;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .login-box {
-      width: 100%;
-      max-width: 400px;
-      background: white;
-      padding: 30px;
-      border-radius: 14px;
-      box-shadow: 0 5px 25px #00000015;
-    }
-
-    h1 {
-      color: #123b70;
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #667085;
-      margin-bottom: 25px;
-    }
-
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 7px;
-      border: 1px solid #ccd3dd;
-      border-radius: 7px;
-      font-size: 16px;
-    }
-
-    button {
-      width: 100%;
-      padding: 13px;
-      margin-top: 22px;
-      border: none;
-      border-radius: 7px;
-      background: #123b70;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-
-    #message {
-      margin-top: 18px;
-      overflow-wrap: anywhere;
-      line-height: 1.5;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My School System Login</title>
+<style>
+body{font-family:Arial,sans-serif;background:#eef2f7;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px;box-sizing:border-box}
+main{background:white;padding:25px;border-radius:12px;width:100%;max-width:400px;box-sizing:border-box}
+label{display:block;margin-top:15px;font-weight:bold}
+input,button{width:100%;padding:12px;margin-top:7px;box-sizing:border-box;font-size:16px}
+button{background:#123b70;color:white;border:0;border-radius:6px;margin-top:20px}
+#message{line-height:1.5;overflow-wrap:anywhere}
+</style>
 </head>
-
 <body>
-  <main class="login-box">
-    <h1>My School System</h1>
-    <p class="subtitle">Sign in to your account</p>
-
-    <form id="loginForm">
-      <label for="email">Email Address</label>
-      <input
-        type="email"
-        id="email"
-        autocomplete="username"
-        required
-      >
-
-      <label for="password">Password</label>
-      <input
-        type="password"
-        id="password"
-        autocomplete="current-password"
-        required
-      >
-
-      <button id="loginButton" type="submit">Sign In</button>
-    </form>
-
-    <p id="message" role="status" aria-live="polite"></p>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <script>
-    // Replace these placeholders with your Supabase project details.
-    const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
-    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
-
-    const message = document.getElementById("message");
-    const button = document.getElementById("loginButton");
-
-    const supabaseClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    );
-
-    document.getElementById("loginForm").addEventListener(
-      "submit",
-      async function (event) {
-        event.preventDefault();
-
-        button.disabled = true;
-        message.textContent = "Signing in...";
-
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-
-        try {
-          const { data, error } =
-            await supabaseClient.auth.signInWithPassword({
-              email,
-              password
-            });
-
-          if (error) throw error;
-
-          const { data: profile, error: profileError } =
-            await supabaseClient
-              .from("user_profiles")
-              .select("full_name, role, school_id")
-              .eq("id", data.user.id)
-              .maybeSingle();
-
-          if (profileError) {
-            throw new Error(
-              "Could not load your profile. Check your database permissions."
-            );
-          }
-
-          if (!profile) {
-            await supabaseClient.auth.signOut();
-            throw new Error(
-              "Your account has no system profile. Contact the platform developer."
-            );
-          }
-
-          message.textContent =
-            "Login successful. Role: " + profile.role;
-
-          if (profile.role === "platform_developer") {
-  window.location.href = "developer-dashboard.html";
-  return;
+<main>
+<h1>My School System</h1>
+<p>Sign in to your account</p>
+<form id="loginForm">
+<label for="email">Email address</label>
+<input id="email" type="email" autocomplete="username" required>
+<label for="password">Password</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<button id="loginButton" type="submit">Sign In</button>
+</form>
+<p id="message" role="status"></p>
+<p><a href="school-admin-register.html">Register administrator</a></p>
+<p><a href="register-school.html">Register school</a></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function(){
+const message=document.getElementById("message");
+const button=document.getElementById("loginButton");
+if(!window.supabase){
+message.textContent="Supabase failed to load. Check your internet connection and reload.";
+return;
 }
-          } else if (profile.role === "school_admin") {
-            if (!profile.school_id) {
-              throw new Error("Your account is not assigned to a school.");
-            }
-
-            window.location.href = "school-admin.html";
-            return;
-          } else {
-            message.textContent +=
-              ". Your role-specific dashboard is not configured yet.";
-          }
-        } catch (error) {
-          message.textContent = error.message;
-        } finally {
-          button.disabled = false;
-        }
-      }
-    );
-  </script>
+const db=window.supabase.createClient(
+"https://apshhzczrofxwjsgenlv.supabase.co",
+"sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP"
+);
+document.getElementById("loginForm").addEventListener("submit",async function(e){
+e.preventDefault();
+button.disabled=true;
+message.textContent="Signing in...";
+try{
+const email=document.getElementById("email").value.trim().toLowerCase();
+const password=document.getElementById("password").value;
+const {data:auth,error:authError}=await db.auth.signInWithPassword({email,password});
+if(authError) throw authError;
+const {data:profile,error:profileError}=await db
+.from("msys_user_profiles")
+.select("id,role,school_id,status")
+.eq("id",auth.user.id)
+.maybeSingle();
+if(profileError) throw new Error("Profile lookup failed: "+profileError.message);
+if(!profile){
+await db.auth.signOut();
+throw new Error("No system profile found for this account. Contact the developer.");
+}
+const role=(profile.role||"").toLowerCase();
+const status=(profile.status||"").toLowerCase();
+if(role==="platform_developer"||role==="developer"){
+location.replace("developer-dashboard.html");
+return;
+}
+if(status!=="approved"&&status!=="active"){
+await db.auth.signOut();
+throw new Error("Your account is pending approval or is not active.");
+}
+if(role==="school_admin"||role==="school_administrator"){
+if(!profile.school_id) throw new Error("Your account has no assigned school.");
+location.replace("school-admin.html");
+return;
+}
+if(role==="teacher"){location.replace("teachers.html");return;}
+if(role==="student"){location.replace("student.html");return;}
+await db.auth.signOut();
+throw new Error("No dashboard is configured for role: "+role);
+}catch(err){
+message.textContent=err.message||"Login failed.";
+button.disabled=false;
+}
+});
+})();
+</script>
 </body>
 </html>
