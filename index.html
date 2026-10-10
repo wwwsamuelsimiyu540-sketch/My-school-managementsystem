@@ -2,385 +2,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My School System</title>
-<style>
-:root{--navy:#14213d;--blue:#2563eb;--bg:#f3f6fb;--green:#16845b;--red:#c0392b}
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#202b3c}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer;border:0;border-radius:7px;padding:10px 14px;background:var(--blue);color:white}
-button:hover{opacity:.88}
-button.secondary{background:#e5eaf2;color:#18243a}
-button.danger{background:var(--red)}
-input,select,textarea{width:100%;padding:11px;margin:5px 0 12px;border:1px solid #ccd4e0;border-radius:7px;background:white}
-label{font-size:13px;font-weight:bold}
-h1,h2,h3{margin-top:0}
-small,.muted{color:#738096}
-#auth{max-width:470px;margin:35px auto;padding:25px;background:white;border-radius:15px;box-shadow:0 5px 25px #14213d15}
-.brand{font-size:24px;font-weight:bold;color:var(--blue);margin-bottom:8px}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
-.tabs button{flex:1;min-width:100px}
-#app{display:none;min-height:100vh}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:245px;background:var(--navy);color:white;padding:20px 12px;overflow:auto}
-.sidebar .brand{color:white;padding:8px}
-.sidebar button{display:block;width:100%;text-align:left;background:transparent;margin:3px 0}
-.sidebar button:hover,.sidebar button.active{background:#ffffff20}
-main{margin-left:245px;padding:25px;min-width:0}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:15px;margin:20px 0}
-.card,.panel{background:white;padding:19px;border-radius:12px;box-shadow:0 3px 12px #14213d0b}
-.card .number{font-size:28px;font-weight:bold;margin-top:10px}
-.panel{margin:16px 0;overflow-x:auto}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.toolbar input{flex:1;min-width:180px;margin:0}
-table{border-collapse:collapse;width:100%;background:white}
-th,td{padding:12px 10px;border-bottom:1px solid #e8edf4;text-align:left;font-size:13px;white-space:nowrap}
-th{background:#f7f9fc}
-.tag{padding:5px 8px;border-radius:15px;background:#e7eefb;font-size:12px}
-.tag.Approved,.tag.Present{background:#d9f5e8;color:#126b48}
-.tag.Pending{background:#fff0c2;color:#805600}
-.tag.Rejected,.tag.Absent{background:#ffe1df;color:#9e2924}
-.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:5px}
-.notice{padding:12px;background:#eaf1ff;border-radius:8px;margin:12px 0;font-size:13px}
-.hidden{display:none!important}
-#toast{position:fixed;bottom:20px;right:20px;background:#14213d;color:white;padding:13px 18px;border-radius:8px;display:none;z-index:10}
-@media(max-width:720px){.sidebar{position:relative;width:100%;height:auto;max-height:230px}.sidebar button{display:inline-block;width:auto}main{margin-left:0;padding:14px}#auth{margin:15px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My School System</title>
+  <meta http-equiv="refresh" content="0;url=login.html">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #14213d;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    main {
+      background: white;
+      padding: 30px;
+      border-radius: 14px;
+      max-width: 460px;
+      margin: 20px;
+      box-shadow: 0 5px 25px #14213d18;
+    }
+    a { color: #2563eb; }
+  </style>
 </head>
 <body>
-
-<section id="auth">
-  <div class="brand">My School System</div>
-  <p class="muted">School administration platform</p>
-  <div class="tabs">
-    <button onclick="showAuth('login')">Login</button>
-    <button class="secondary" onclick="showAuth('admin')">Register Administrator</button>
-    <button class="secondary" onclick="showAuth('school')">Register School</button>
-  </div>
-
-  <form id="loginForm" onsubmit="login(event)">
-    <h2>Welcome back</h2>
-    <label>Username, email or phone</label>
-    <input id="loginId" required placeholder="Enter your login identifier">
-    <label>Password</label>
-    <input id="loginPass" type="password" required placeholder="Enter password">
-    <button style="width:100%">Login</button>
-    <p class="muted">Administrator access requires approval in this demonstration.</p>
-  </form>
-
-  <form id="adminForm" class="hidden" onsubmit="registerAdmin(event)">
-    <h2>Administrator registration</h2>
-    <label>Full name</label><input id="adminName" required>
-    <label>Username</label><input id="adminUser" required>
-    <label>Email</label><input id="adminEmail" type="email" required>
-    <label>Phone number</label><input id="adminPhone" required>
-    <label>Select registered school</label><select id="adminSchool" required></select>
-    <label>Password</label><input id="adminPassword" type="password" minlength="8" required>
-    <label>Confirm password</label><input id="adminConfirm" type="password" minlength="8" required>
-    <button style="width:100%">Submit registration</button>
-  </form>
-
-  <form id="schoolForm" class="hidden" onsubmit="registerSchool(event)">
-    <h2>Register a school</h2>
-    <label>School name</label><input id="schoolName" required>
-    <label>School registration number</label><input id="schoolCode" required>
-    <label>County</label><input id="schoolCounty" required>
-    <label>School type</label>
-    <select id="schoolType"><option>Primary</option><option>Junior School</option><option>Secondary</option><option>Mixed</option><option>College</option><option>Other</option></select>
-    <label>Contact phone</label><input id="schoolPhone" required>
-    <label>Contact email</label><input id="schoolEmail" type="email" required>
-    <button style="width:100%">Submit school registration</button>
-  </form>
-</section>
-
-<div id="app">
-  <aside class="sidebar">
-    <div class="brand">My School System</div>
-    <p id="sideUser" style="padding:8px;font-size:12px;color:#cbd5e1"></p>
-    <div id="navigation"></div>
-    <button onclick="logout()">↪ Log out</button>
-  </aside>
   <main>
-    <div class="top">
-      <div><h1 id="pageTitle">Dashboard</h1><div class="muted" id="pageSubtitle">School management overview</div></div>
-      <button class="secondary" onclick="renderPage()">Refresh</button>
-    </div>
-    <div id="content"></div>
+    <h1>My School System</h1>
+    <p>Opening secure sign-in...</p>
+    <p>If the page does not open, select the link below.</p>
+    <p><a href="login.html">Sign in</a></p>
+    <p><a href="register-school.html">Register a school</a></p>
+    <p><a href="school-admin-register.html">Register a school administrator</a></p>
+    <script>
+      window.location.replace("login.html");
+    </script>
   </main>
-</div>
-<div id="toast"></div>
-
-<script>
-const $ = id => document.getElementById(id);
-const get = key => JSON.parse(localStorage.getItem("mss_"+key) || "[]");
-const put = (key,value) => localStorage.setItem("mss_"+key,JSON.stringify(value));
-const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-let currentUser = null;
-let currentPage = "Dashboard";
-let editing = null;
-
-const modules = {
- "Schools": ["name","code","county","type","phone","email","status"],
- "Administrators": ["name","username","email","phone","school","status"],
- "Students": ["admissionNo","name","gender","class","guardian","phone","status"],
- "Teachers": ["staffNo","name","subject","phone","email","status"],
- "Classes": ["name","teacher","stream","year"],
- "Attendance": ["date","student","class","status"],
- "Fees": ["date","student","class","amount","paid","balance","status"],
- "Exams": ["name","class","subject","date","maxMarks"],
- "Announcements": ["title","audience","date","message"],
- "Timetable": ["day","class","subject","teacher","startTime","endTime"],
- "Library": ["book","author","quantity","status"],
- "Transport": ["route","vehicle","driver","capacity"],
- "Staff": ["name","role","phone","email","status"],
- "Parents": ["name","phone","email","student"],
- "Reports": ["title","date","notes"],
- "Settings": []
-};
-
-const titles = {
- "Dashboard":"Overview of your school system",
- "Schools":"School registration and approval",
- "Administrators":"Administrator accounts and approval",
- "Students":"Student records",
- "Teachers":"Teacher records",
- "Classes":"Class and stream management",
- "Attendance":"Student attendance records",
- "Fees":"School fee tracking",
- "Exams":"Examination management",
- "Announcements":"School announcements",
- "Timetable":"Lessons and timetable",
- "Library":"Library book records",
- "Transport":"School transport records",
- "Staff":"Staff information",
- "Parents":"Parent and guardian records",
- "Reports":"Reports and data exports",
- "Settings":"System configuration"
-};
-
-function toast(msg){
-  $("toast").textContent=msg;
-  $("toast").style.display="block";
-  setTimeout(()=>$("toast").style.display="none",3000);
-}
-function showAuth(which){
-  ["loginForm","adminForm","schoolForm"].forEach(id=>$(id).classList.add("hidden"));
-  $(({login:"loginForm",admin:"adminForm",school:"schoolForm"})[which]).classList.remove("hidden");
-  fillSchoolOptions();
-}
-function fillSchoolOptions(){
-  const select=$("adminSchool");
-  if(!select)return;
-  const schools=get("Schools").filter(s=>s.status==="Approved");
-  select.innerHTML=schools.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("");
-  if(!schools.length)select.innerHTML='<option value="">No approved schools available</option>';
-}
-function esc(v){
- return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-function registerSchool(e){
- e.preventDefault();
- const schools=get("Schools"),code=$("schoolCode").value.trim();
- if(schools.some(s=>s.code.toLowerCase()===code.toLowerCase()))return toast("That registration number already exists.");
- schools.push({id:uid(),name:$("schoolName").value.trim(),code,county:$("schoolCounty").value.trim(),type:$("schoolType").value,phone:$("schoolPhone").value.trim(),email:$("schoolEmail").value.trim(),status:"Pending",created:new Date().toISOString()});
- put("Schools",schools);e.target.reset();toast("School submitted. Waiting for developer approval.");showAuth("login");
-}
-function registerAdmin(e){
- e.preventDefault();
- const pass=$("adminPassword").value;
- if(pass!==$("adminConfirm").value)return toast("Passwords do not match.");
- if(pass.length<8)return toast("Use at least 8 characters for the password.");
- const school=$("adminSchool").value;
- if(!school)return toast("There are no approved schools to select.");
- const admins=get("Administrators");
- const username=$("adminUser").value.trim(),email=$("adminEmail").value.trim().toLowerCase(),phone=$("adminPhone").value.trim();
- if(admins.some(a=>a.username.toLowerCase()===username.toLowerCase()||a.email.toLowerCase()===email||a.phone===phone))return toast("Username, email or phone already registered.");
- admins.push({id:uid(),name:$("adminName").value.trim(),username,email,phone,school,password:pass,status:"Pending",created:new Date().toISOString()});
- put("Administrators",admins);e.target.reset();toast("Registration sent. Wait for developer approval.");showAuth("login");
-}
-function login(e){
- e.preventDefault();
- const id=$("loginId").value.trim().toLowerCase(),pass=$("loginPass").value;
- // DEMO ONLY: change/remove this local developer login before public deployment.
- if(id==="developer"&&pass==="ChangeMe123!"){
-  currentUser={role:"Developer",name:"Platform Developer"};openApp();return;
- }
- const admin=get("Administrators").find(a=>(a.username.toLowerCase()===id||a.email.toLowerCase()===id||a.phone.toLowerCase()===id));
- if(!admin)return toast("Account not found. Register first.");
- if(admin.password!==pass)return toast("Incorrect password.");
- if(admin.status!=="Approved")return toast("Your account is "+admin.status+". Wait for developer approval.");
- currentUser={role:"Administrator",name:admin.name,school:admin.school,id:admin.id};openApp();
-}
-function openApp(){
- $("auth").style.display="none";$("app").style.display="block";
- $("sideUser").textContent=currentUser.name+" · "+currentUser.role;
- buildNav();renderPage();
-}
-function logout(){
- currentUser=null;$("app").style.display="none";$("auth").style.display="block";
- $("loginPass").value="";showAuth("login");
-}
-function buildNav(){
- const list=currentUser.role==="Developer"
- ?["Dashboard","Schools","Administrators","Reports","Settings"]
- :["Dashboard","Students","Teachers","Classes","Attendance","Fees","Exams","Announcements","Timetable","Library","Transport","Staff","Parents","Reports","Settings"];
- $("navigation").innerHTML=list.map(p=>`<button class="${p===currentPage?"active":""}" onclick="navigate('${p}')">${p==="Dashboard"?"⌂ ":""}${p}</button>`).join("");
-}
-function navigate(p){
- currentPage=p;editing=null;buildNav();renderPage();
-}
-function scoped(key){
- let data=get(key);
- if(currentUser.role==="Administrator"&&key!=="Schools"&&key!=="Administrators"){
-  data=data.filter(x=>!x.school||x.school===currentUser.school);
- }
- return data;
-}
-function saveScoped(key,data){put(key,data)}
-function renderPage(){
- $("pageTitle").textContent=currentPage;$("pageSubtitle").textContent=titles[currentPage]||"Manage records";
- const area=$("content");
- if(currentPage==="Dashboard")return dashboard(area);
- if(currentPage==="Settings")return settings(area);
- if(currentPage==="Reports")return reports(area);
- if(!modules[currentPage]){area.innerHTML="<p>Module unavailable.</p>";return}
- renderTable(area,currentPage);
-}
-function dashboard(area){
- const schools=get("Schools"),admins=get("Administrators");
- const keys=currentUser.role==="Developer"
- ?["Schools","Administrators"]
- :["Students","Teachers","Classes","Attendance","Fees","Exams"];
- let html=`<div class="cards">
- <div class="card">Registered schools<div class="number">${schools.length}</div></div>
- <div class="card">Pending schools<div class="number">${schools.filter(s=>s.status==="Pending").length}</div></div>
- <div class="card">Administrators<div class="number">${admins.length}</div></div>
- <div class="card">Pending administrators<div class="number">${admins.filter(a=>a.status==="Pending").length}</div></div>`;
- keys.filter(k=>!["Schools","Administrators"].includes(k)).forEach(k=>html+=`<div class="card">${k}<div class="number">${scoped(k).length}</div></div>`);
- html+="</div>";
- if(currentUser.role==="Developer"){
-  html+=`<div class="panel"><h2>Pending school registrations</h2>${simpleApproval(schools.filter(s=>s.status==="Pending"),"Schools")}</div>
-  <div class="panel"><h2>Pending administrator registrations</h2>${simpleApproval(admins.filter(a=>a.status==="Pending"),"Administrators")}</div>`;
- }else{
-  html+=`<div class="panel"><h2>Welcome, ${esc(currentUser.name)}</h2><p>School: <b>${esc(currentUser.school)}</b></p><p>Use the menu to manage school records.</p></div>`;
- }
- area.innerHTML=html;
-}
-function simpleApproval(rows,key){
- if(!rows.length)return "<p class='muted'>No pending requests.</p>";
- return `<table><thead><tr><th>Name</th><th>Details</th><th>Action</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.code||r.email||r.school||"")}</td><td><button onclick="approve('${key}','${r.id}','Approved')">Approve</button> <button class="danger" onclick="approve('${key}','${r.id}','Rejected')">Reject</button></td></tr>`).join("")}</tbody></table>`;
-}
-function approve(key,id,status){
- if(currentUser.role!=="Developer")return toast("Only the developer can approve registrations.");
- const rows=get(key),row=rows.find(r=>r.id===id);
- if(!row)return;
- row.status=status;put(key,rows);toast("Status changed to "+status);renderPage();
-}
-function renderTable(area,key){
- const fields=modules[key],rows=scoped(key);
- const adminView=key==="Schools"||key==="Administrators";
- if(adminView&&currentUser.role!=="Developer"){area.innerHTML="<p>Developer access required.</p>";return}
- const canAdd=key!=="Schools"&&key!=="Administrators";
- let html=`<div class="panel"><div class="toolbar"><input id="searchBox" placeholder="Search ${key.toLowerCase()}..." oninput="filterRows()">${canAdd?`<button onclick="openRecordForm('${key}')">+ Add ${key.slice(0,-1)||"record"}</button>`:"" }<button class="secondary" onclick="exportCSV('${key}')">Export CSV</button></div>
- <div id="tableArea">${tableHTML(key,rows,fields)}</div></div>`;
- if(key==="Schools"||key==="Administrators"){
-  html+=`<div class="panel"><h3>Registration approvals</h3><p class="muted">Approve or reject pending requests. Approved administrators can sign in to their assigned school.</p>${simpleApproval(rows.filter(r=>r.status==="Pending"),key)}</div>`;
- }
- area.innerHTML=html;
-}
-function tableHTML(key,rows,fields){
- let cols=fields||modules[key]||[];
- if(!rows.length)return `<p class="muted">No ${esc(key.toLowerCase())} records yet.</p>`;
- return `<table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}<th>Actions</th></tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${c==="status"?`<span class="tag ${esc(r[c]||"")}">${esc(r[c]||"—")}</span>`:esc(r[c]??"—")}</td>`).join("")}<td>${key!=="Schools"&&key!=="Administrators"?`<button class="secondary" onclick="editRecord('${key}','${r.id}')">Edit</button> <button class="danger" onclick="deleteRecord('${key}','${r.id}')">Delete</button>`:`<span class="muted">Approval above</span>`}</td></tr>`).join("")}</tbody></table>`;
-}
-function filterRows(){
- const key=currentPage,q=$("searchBox").value.toLowerCase();
- const rows=scoped(key).filter(r=>JSON.stringify(r).toLowerCase().includes(q));
- $("tableArea").innerHTML=tableHTML(key,rows,modules[key]);
-}
-function openRecordForm(key,record={}){
- if(currentUser.role!=="Developer"&&["Schools","Administrators"].includes(key))return toast("Developer access required.");
- const fields=modules[key],isEdit=!!record.id;
- const fieldHtml=fields.map(f=>{
-  let value=record[f]??"";
-  if(f==="status")return `<label>${esc(f)}</label><select name="${f}">${["Active","Pending","Approved","Rejected","Present","Absent","Paid","Unpaid","Available","Borrowed"].map(v=>`<option ${value===v?"selected":""}>${v}</option>`).join("")}</select>`;
-  if(f==="gender"||f==="audience")return `<label>${esc(f)}</label><select name="${f}">${(f==="gender"?["Female","Male","Other"]:["All","Students","Teachers","Parents","Staff"]).map(v=>`<option ${value===v?"selected":""}>${v}</option>`).join("")}</select>`;
-  if(f==="message"||f==="notes")return `<label>${esc(f)}</label><textarea name="${f}">${esc(value)}</textarea>`;
-  if(f==="date"||f==="startTime"||f==="endTime")return `<label>${esc(f)}</label><input name="${f}" type="${f==="date"?"date":"time"}" value="${esc(value)}">`;
-  if(["amount","paid","balance","maxMarks","quantity","capacity","year"].includes(f))return `<label>${esc(f)}</label><input name="${f}" type="number" min="0" value="${esc(value)}">`;
-  return `<label>${esc(f)}</label><input name="${f}" value="${esc(value)}" ${["name","student","title"].includes(f)?"required":""}>`;
- }).join("");
- const form=`<div class="panel"><h2>${isEdit?"Edit":"Add"} ${esc(key)}</h2><form onsubmit="saveRecord(event,'${key}','${record.id||""}')"><div class="formgrid">${fieldHtml}</div><button>Save record</button> <button type="button" class="secondary" onclick="renderPage()">Cancel</button></form></div>`;
- $("content").innerHTML=form;
-}
-function editRecord(key,id){const r=scoped(key).find(x=>x.id===id);if(r)openRecordForm(key,r)}
-function saveRecord(e,key,id){
- e.preventDefault();const form=e.target,record={};
- new FormData(form).forEach((v,k)=>record[k]=String(v).trim());
- if(!record.date&&["Attendance","Fees","Exams","Announcements","Reports"].includes(key))record.date=new Date().toISOString().slice(0,10);
- const rows=get(key);record.school=currentUser.school||record.school;
- if(id){
-  const idx=rows.findIndex(r=>r.id===id);
-  if(idx<0)return toast("Record not found.");
-  if(currentUser.role==="Administrator"&&rows[idx].school&&rows[idx].school!==currentUser.school)return toast("Not authorized.");
-  rows[idx]={...rows[idx],...record};
- }else{record.id=uid();rows.push(record)}
- put(key,rows);toast("Record saved.");renderPage();
-}
-function deleteRecord(key,id){
- if(!confirm("Delete this record? This cannot be undone."))return;
- const rows=get(key).filter(r=>r.id!==id);put(key,rows);toast("Record deleted.");renderPage();
-}
-function exportCSV(key){
- const rows=scoped(key);
- if(!rows.length)return toast("There are no records to export.");
- const cols=[...new Set(rows.flatMap(r=>Object.keys(r)))];
- const csv=[cols.join(","),...rows.map(r=>cols.map(c=>'"'+String(r[c]??"").replace(/"/g,'""')+'"').join(","))].join("\r\n");
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=key.toLowerCase()+".csv";a.click();URL.revokeObjectURL(a.href);
-}
-function reports(area){
- area.innerHTML=`<div class="panel"><h2>System reports</h2><p>Download CSV records for the selected module.</p><div class="formgrid"><div><label>Select module</label><select id="exportModule">${Object.keys(modules).filter(k=>modules[k].length).map(k=>`<option>${k}</option>`).join("")}</select></div></div><button onclick="exportCSV($('exportModule').value)">Export selected module</button><button class="secondary" onclick="exportBackup()">Export complete browser backup</button><button class="secondary" onclick="$('importFile').click()">Import backup JSON</button><input id="importFile" type="file" accept=".json,application/json" class="hidden" onchange="importBackup(event)"><div class="notice">Keep backups secure. Imported records replace the local demonstration records.</div></div>`;
-}
-function exportBackup(){
- const data={};Object.keys(modules).forEach(k=>data[k]=get(k));
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="my-school-system-backup.json";a.click();URL.revokeObjectURL(a.href);
-}
-function importBackup(e){
- const file=e.target.files[0];if(!file)return;
- const reader=new FileReader();
- reader.onload=()=>{try{
-  const data=JSON.parse(reader.result);
-  if(!confirm("Replace local demonstration records with this backup?"))return;
-  Object.keys(modules).forEach(k=>{if(Array.isArray(data[k]))put(k,data[k])});
-  toast("Backup imported.");renderPage();
- }catch(err){toast("Invalid backup JSON file.")}};
- reader.readAsText(file);
-}
-function settings(area){
- area.innerHTML=`<div class="panel"><h2>System settings</h2><p>Configure your Supabase project connection for a future connected version.</p><div class="notice">Saving these values here only stores them in this browser. It does not connect every module to Supabase or secure user accounts.</div><label>Supabase project URL</label><input id="sbUrl" placeholder="https://your-project.supabase.co" value="${esc(localStorage.getItem("mss_sbUrl")||"")}"><label>Supabase publishable key</label><input id="sbKey" placeholder="sb_publishable_..." value="${esc(localStorage.getItem("mss_sbKey")||"")}"><button onclick="saveSettings()">Save settings</button> <button class="secondary" onclick="testSupabase()">Test REST endpoint</button><p id="connectionResult" class="muted"></p></div><div class="panel"><h3>Local demonstration data</h3><p>Clear the records stored in this browser. This does not delete data in Supabase.</p><button class="danger" onclick="clearLocalData()">Clear local demonstration records</button></div>`;
-}
-function saveSettings(){
- const url=$("sbUrl").value.trim().replace(/\/+$/,""),key=$("sbKey").value.trim();
- if(url&&!/^https:\/\/[a-zA-Z0-9.-]+$/.test(url))return toast("Enter a valid HTTPS Supabase URL.");
- localStorage.setItem("mss_sbUrl",url);localStorage.setItem("mss_sbKey",key);toast("Settings saved in this browser.");
-}
-async function testSupabase(){
- const url=$("sbUrl").value.trim().replace(/\/+$/,""),key=$("sbKey").value.trim();
- if(!url||!key)return toast("Enter the Supabase URL and publishable key first.");
- $("connectionResult").textContent="Testing connection...";
- try{
-  const res=await fetch(url+"/rest/v1/",{headers:{apikey:key,Authorization:"Bearer "+key}});
-  $("connectionResult").textContent=res.ok?"Endpoint responded. This does not verify your tables, permissions, or login.":"Endpoint returned HTTP "+res.status+". Check the URL and project settings.";
- }catch(e){$("connectionResult").textContent="Could not reach the endpoint. Check your internet connection and project URL."}
-}
-function clearLocalData(){
- if(!confirm("Permanently clear all My School System local demonstration records from this browser?"))return;
- Object.keys(modules).forEach(k=>localStorage.removeItem("mss_"+k));
- toast("Local records cleared.");renderPage();
-}
-showAuth("login");
-</script>
 </body>
 </html>
