@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Dashboard | My School System</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#172337}
+header{background:#102746;color:white;padding:20px}
+header h2{margin:0 0 6px}
+header p{margin:0;color:#cbd5e1}
+nav{background:white;padding:13px 20px;border-bottom:1px solid #e2e8f0}
+main{max-width:1100px;margin:25px auto;padding:0 16px}
+.panel,.card{background:white;padding:20px;border:1px solid #e2e8f0;border-radius:12px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:20px 0}
+.number{font-size:28px;font-weight:bold;margin-top:10px}
+.muted{color:#64748b;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+button{border:0;border-radius:7px;padding:12px 16px;background:#2563eb;color:white;cursor:pointer;font-weight:bold}
+button.secondary{background:#e8eef8;color:#17345a}
+.message{display:none;padding:12px;border-radius:8px;margin:15px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.error{display:block;background:#fee2e2;color:#991b1b}
+.info{display:block;background:#dbeafe;color:#1e40af}
+.success{display:block;background:#dcfce7;color:#166534}
+@media(max-width:650px){.cards,.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h2>My School System</h2>
+  <p>School Administrator Dashboard</p>
+</header>
+<nav>
+  <span id="adminEmail">Checking account...</span>
+  <button id="logout" style="float:right">Log out</button>
+</nav>
+<main>
+  <div id="message" class="message" role="status" aria-live="polite"></div>
+
+  <section class="panel">
+    <div class="muted">YOUR ASSIGNED SCHOOL</div>
+    <h2 id="schoolName">Loading school...</h2>
+    <p id="schoolStatus" class="muted">Verifying access...</p>
+  </section>
+
+  <section class="cards">
+    <div class="card">
+      <div class="muted">Students</div>
+      <div class="number">—</div>
+      <p class="muted">Connect student records next.</p>
+    </div>
+    <div class="card">
+      <div class="muted">Teachers</div>
+      <div class="number">—</div>
+      <p class="muted">Connect teacher records next.</p>
+    </div>
+    <div class="card">
+      <div class="muted">School fees</div>
+      <div class="number">—</div>
+      <p class="muted">Connect fee records next.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>School Management</h3>
+    <p class="muted">These are starting navigation buttons. Their modules will be connected in later steps.</p>
+    <div class="grid">
+      <button data-module="Students">Students</button>
+      <button data-module="Teachers">Teachers and Staff</button>
+      <button data-module="Classes">Classes and Streams</button>
+      <button data-module="Attendance">Attendance</button>
+      <button data-module="Examinations">Examinations and Results</button>
+      <button data-module="Fees">Fees and Payments</button>
+      <button data-module="Timetable">Timetable</button>
+      <button data-module="Reports">School Reports</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // Use the same values as your existing working login page.
+  const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+  const $ = id => document.getElementById(id);
+  const message = $("message");
+
+  function showMessage(text, type = "info") {
+    message.className = "message " + type;
+    message.textContent = text;
+    message.style.display = "block";
+  }
+
+  async function start() {
+    if (SUPABASE_URL.includes("PASTE_YOUR") ||
+        SUPABASE_ANON_KEY.includes("PASTE_YOUR")) {
+      showMessage("Add the Supabase URL and publishable key from your existing login page.", "error");
+      $("schoolName").textContent = "Configuration required";
+      return;
+    }
+
+    if (!window.supabase) {
+      showMessage("Supabase failed to load. Check your internet connection.", "error");
+      return;
+    }
+
+    const db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    const { data: sessionData, error: sessionError } =
+      await db.auth.getSession();
+
+    if (sessionError || !sessionData.session) {
+      location.replace("login.html");
+      return;
+    }
+
+    const user = sessionData.session.user;
+    $("adminEmail").textContent = user.email || "Signed in";
+    $("schoolName").textContent = "Checking assigned school...";
+
+    // Read only this authenticated user's profile.
+    const { data: profile, error: profileError } = await db
+      .from("msys_user_profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      showMessage("Unable to verify your profile: " + profileError.message, "error");
+      $("schoolName").textContent = "Access not verified";
+      return;
+    }
+
+    if (!profile) {
+      showMessage("No user profile was found. Ask the developer to finish your account setup.", "error");
+      $("schoolName").textContent = "Profile not found";
+      return;
+    }
+
+    if (profile.role !== "school_admin") {
+      showMessage("This page is for school administrators. Your account role is: " +
+        String(profile.role || "unassigned"), "error");
+      $("schoolName").textContent = "Access denied";
+      return;
+    }
+
+    const schoolId = profile.school_id;
+
+    if (!schoolId) {
+      showMessage("No school is assigned to this account. Contact the developer.", "error");
+      $("schoolName").textContent = "School not assigned";
+      return;
+    }
+
+    // RLS must also enforce which schools the user may read.
+    const { data: school, error: schoolError } = await db
+      .from("msys_schools")
+      .select("id, name, status")
+      .eq("id", schoolId)
+      .maybeSingle();
+
+    if (schoolError || !school) {
+      showMessage(
+        "Could not load your assigned school. Check school table columns and Supabase RLS." +
+        (schoolError ? " " + schoolError.message : ""),
+        "error"
+      );
+      $("schoolName").textContent = "School unavailable";
+      return;
+    }
+
+    $("schoolName").textContent = school.name || "My School";
+    $("schoolStatus").textContent = "School status: " +
+      String(school.status || "Not specified") +
+      " | Role: School Administrator";
+
+    $("logout").addEventListener("click", async () => {
+      const { error } = await db.auth.signOut();
+      if (error) {
+        showMessage("Could not log out: " + error.message, "error");
+        return;
+      }
+      location.replace("login.html");
+    });
+
+    document.querySelectorAll("[data-module]").forEach(button => {
+      button.addEventListener("click", () => {
+        showMessage(
+          button.dataset.module +
+          " module is ready for connection. It has not been linked to database records yet.",
+          "info"
+        );
+      });
+    });
+  }
+
+  start().catch(error => {
+    showMessage("Dashboard error: " + error.message, "error");
+  });
+})();
+</script>
+</body>
+ </html>
+ 
