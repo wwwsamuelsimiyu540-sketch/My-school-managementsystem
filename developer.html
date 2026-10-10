@@ -3,225 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My School System | Developer Dashboard</title>
-
+<title>My School System | Developer Portal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root {
-  --navy:#10264a;
-  --blue:#0866e9;
-  --bg:#f3f6fb;
-  --border:#e0e7f0;
-  --text:#172b4d;
-}
-* { box-sizing:border-box; }
-body {
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-button,input,select { font:inherit; }
-button { cursor:pointer; }
-.layout { display:flex; min-height:100vh; }
-.sidebar {
-  width:255px;
-  background:#092044;
-  color:white;
-  padding:20px 12px;
-  flex-shrink:0;
-}
-.brand {
-  font-size:20px;
-  font-weight:bold;
-  padding:8px 10px 24px;
-}
-.brand small {
-  display:block;
-  color:#53d6ff;
-  font-size:12px;
-  margin-top:5px;
-}
-.nav-heading {
-  color:#66cfff;
-  font-size:11px;
-  margin:22px 8px 8px;
-  text-transform:uppercase;
-}
-.nav {
-  display:block;
-  width:100%;
-  padding:11px 12px;
-  margin:3px 0;
-  border:0;
-  border-radius:7px;
-  background:transparent;
-  color:#e7efff;
-  text-align:left;
-}
-.nav:hover,.nav.active { background:#1559b8; }
-.main { flex:1; min-width:0; }
-.topbar {
-  background:white;
-  border-bottom:1px solid var(--border);
-  padding:16px 22px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-}
-.search { width:min(420px,100%); }
-input,select {
-  padding:11px;
-  border:1px solid #cbd5e1;
-  border-radius:7px;
-  background:white;
-  max-width:100%;
-}
-.search input { width:100%; }
-.content { padding:22px; }
-.welcome {
-  padding:20px;
-  border-radius:10px;
-  background:#e2efff;
-  border-left:5px solid var(--blue);
-  margin-bottom:20px;
-}
-h1 { font-size:24px; margin:0 0 7px; }
-h2 { font-size:19px; margin:0 0 16px; }
-h3 { font-size:15px; margin:0 0 12px; }
-.muted { color:#64748b; font-size:13px; }
-.grid {
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:14px;
-  margin-bottom:20px;
-}
-.stat {
-  color:white;
-  border-radius:10px;
-  padding:18px;
-  min-height:105px;
-}
-.stat strong { display:block; font-size:28px; margin-bottom:7px; }
-.blue { background:#0878f9; }
-.green { background:#08a969; }
-.orange { background:#f59e0b; }
-.red { background:#ef3340; }
-.purple { background:#713be5; }
-.teal { background:#079e9a; }
-.slate { background:#45556b; }
-.panel {
-  background:white;
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:20px;
-  margin-bottom:18px;
-  min-width:0;
-}
-.panel-head {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-}
-.actions { display:flex; gap:7px; flex-wrap:wrap; }
-.btn {
-  border:0;
-  padding:9px 12px;
-  border-radius:6px;
-  color:white;
-  background:var(--blue);
-  font-size:13px;
-}
-.btn.green { background:#07965c; }
-.btn.orange { background:#e88b00; }
-.btn.red { background:#dc2838; }
-.btn.gray { background:#64748b; }
-.btn:hover { filter:brightness(.94); }
-input,select { min-width:0; }
-.filters {
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-}
-.filters input { flex:1; min-width:170px; }
-.table-wrap { overflow-x:auto; }
-table { width:100%; border-collapse:collapse; font-size:13px; }
-th,td {
-  padding:12px 10px;
-  border-bottom:1px solid var(--border);
-  text-align:left;
-  white-space:nowrap;
-}
-th { background:#f6f8fc; }
-.status {
-  padding:5px 9px;
-  border-radius:20px;
-  background:#e2e8f0;
-  font-size:12px;
-}
-.status.approved,.status.active { background:#d1fae5;color:#065f46; }
-.status.pending { background:#fef3c7;color:#92400e; }
-.status.suspended,.status.rejected,.status.expired {
-  background:#fee2e2;color:#991b1b;
-}
-.hidden { display:none !important; }
-.form-grid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:13px;
-}
-.field { display:flex; flex-direction:column; gap:6px; }
-.field label { font-size:13px; font-weight:bold; }
-.field input,.field select { width:100%; }
-.notice {
-  padding:12px;
-  border-radius:7px;
-  margin-bottom:14px;
-  background:#eff6ff;
-  color:#1e40af;
-}
-#message { white-space:pre-wrap; margin-bottom:15px; }
-footer {
-  padding:18px 22px;
-  color:#64748b;
-  font-size:12px;
-  border-top:1px solid var(--border);
-}
-@media(max-width:1050px) {
-  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .sidebar { width:220px; }
-}
-@media(max-width:650px) {
-  .layout { display:block; }
-  .sidebar { width:100%; padding:12px; }
-  .brand { padding-bottom:10px; }
-  .nav-heading { margin-top:12px; }
-  .nav { display:inline-block; width:auto; padding:9px; }
-  .content { padding:12px; }
-  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
-  .stat { padding:13px; }
-  .stat strong { font-size:23px; }
-  .form-grid { grid-template-columns:1fr; }
-  .topbar { padding:12px; }
+:root{--navy:#0b2043;--blue:#1769e8;--bg:#f3f6fb;--border:#dfe6ef;--text:#192b49}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:250px;flex-shrink:0;background:var(--navy);color:white;padding:15px 11px}
+.brand{font-size:19px;font-weight:bold;padding:9px 10px 18px}
+.brand small{display:block;color:#60d5ff;font-size:12px;margin-top:5px}
+.nav-heading{font-size:11px;color:#70d5ff;margin:19px 8px 7px;text-transform:uppercase}
+.nav{display:block;width:100%;padding:10px;border:0;border-radius:6px;background:transparent;color:#edf3ff;text-align:left;margin:2px 0;font-size:13px}
+.nav:hover,.nav.active{background:#1558b2}
+.main{flex:1;min-width:0}
+.topbar{background:white;padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.topbar input{width:min(390px,100%)}
+.content{padding:20px}
+h1{font-size:24px;margin:0 0 8px}
+h2{font-size:19px;margin:0 0 15px}
+h3{font-size:15px;margin:0 0 12px}
+p{line-height:1.5}
+.muted{font-size:12px;color:#64748b}
+.welcome{background:#e2efff;border-left:5px solid var(--blue);padding:20px;border-radius:9px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{padding:17px;border-radius:9px;color:white;min-height:95px}
+.stat strong{display:block;font-size:26px;margin-bottom:7px}
+.blue{background:#1769e8}.green{background:#07965c}.orange{background:#e99008}.red{background:#df3345}.purple{background:#7143d8}.teal{background:#078f91}.gray{background:#526176}
+.panel{background:white;border:1px solid var(--border);border-radius:9px;padding:18px;margin-bottom:16px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.btn{background:var(--blue);color:white;border:0;border-radius:6px;padding:9px 12px;font-size:13px;margin:2px}
+.btn.green{background:#07965c}.btn.orange{background:#e99008}.btn.red{background:#d92d43}.btn.gray{background:#526176}
+.btn:hover{filter:brightness(.94)}
+input,select,textarea{width:100%;min-width:0;padding:10px;border:1px solid #cbd5e1;border-radius:6px;background:white}
+textarea{resize:vertical;min-height:85px}
+.filters,.actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.filters{margin-bottom:14px}.filters input{flex:1;min-width:150px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:11px 9px;text-align:left;border-bottom:1px solid var(--border)}
+th{background:#f5f7fb}
+.status{display:inline-block;padding:5px 8px;border-radius:20px;font-size:12px;background:#e2e8f0}
+.status.approved,.status.active{background:#d1fae5;color:#065f46}
+.status.pending{background:#fef3c7;color:#92400e}
+.status.rejected,.status.suspended,.status.expired{background:#fee2e2;color:#991b1b}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.field label{font-size:13px;font-weight:bold}
+.notice{padding:11px;border-radius:6px;background:#eff6ff;color:#1e40af;font-size:13px}
+.hidden{display:none!important}
+#message{white-space:pre-wrap;margin-bottom:12px;font-size:14px}
+footer{padding:16px 20px;border-top:1px solid var(--border);font-size:12px;color:#64748b}
+@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){
+ .layout{display:block}.sidebar{width:100%;padding:11px}
+ .nav-heading{margin-top:12px}
+ .nav{display:inline-block;width:auto;padding:9px}
+ .content{padding:11px}.topbar{padding:11px}
+ .form-grid{grid-template-columns:1fr}
+ .stat{padding:12px}.stat strong{font-size:22px}
 }
 </style>
 </head>
 
 <body>
 <div class="layout">
-
 <aside class="sidebar">
-  <div class="brand">
-    🎓 My School System
-    <small>Platform Developer</small>
-  </div>
+  <div class="brand">🎓 My School System<small>Platform Developer</small></div>
 
   <button class="nav active" data-page="dashboard">🏠 Dashboard</button>
 
@@ -230,17 +81,17 @@ footer {
   <button class="nav" data-page="schools">🏫 Registered Schools</button>
   <button class="nav" data-page="schools" data-filter="pending">✅ Approve Schools</button>
   <button class="nav" data-page="schools" data-filter="rejected">❌ Rejected Schools</button>
-  <button class="nav" data-page="schools">✏️ Edit School Details</button>
+  <button class="nav" data-page="edit-school">✏️ Edit School Details</button>
   <button class="nav" data-page="schools" data-filter="suspended">⏸ Suspended Schools</button>
-  <button class="nav" data-page="schools">▶ Reactivate Schools</button>
+  <button class="nav" data-page="schools" data-filter="approved">▶ Active Schools</button>
   <button class="nav" data-page="users">👥 School Administrators</button>
 
-  <div class="nav-heading">Subscription Management</div>
+  <div class="nav-heading">Subscriptions</div>
   <button class="nav" data-page="subscriptions">💳 View Subscriptions</button>
-  <button class="nav" data-page="subscriptions">✓ Activate Subscriptions</button>
-  <button class="nav" data-page="subscriptions">📅 Set Expiry Dates</button>
-  <button class="nav" data-page="subscriptions">🔄 Renew Subscriptions</button>
-  <button class="nav" data-page="subscriptions">⚠ Expired Subscriptions</button>
+  <button class="nav" data-page="subscription-form">✓ Activate Subscription</button>
+  <button class="nav" data-page="subscription-form">📅 Set Expiry Dates</button>
+  <button class="nav" data-page="subscription-form">🔄 Renew Subscription</button>
+  <button class="nav" data-page="subscriptions" data-filter="expired">⚠ Expired Subscriptions</button>
   <button class="nav" data-page="plans">📚 Manage Plans</button>
 
   <div class="nav-heading">Platform Management</div>
@@ -256,75 +107,286 @@ footer {
 </aside>
 
 <main class="main">
-  <header class="topbar">
-    <div class="search">
-      <input id="globalSearch" placeholder="Search schools by name..." aria-label="Search schools">
+<header class="topbar">
+  <input id="globalSearch" placeholder="Search schools by name or code">
+  <span id="connectionState" class="muted">Checking connection...</span>
+  <span id="userLabel">Developer</span>
+</header>
+
+<div class="content">
+<div id="message"></div>
+
+<section id="page-dashboard" class="page">
+  <div class="welcome">
+    <h1>Platform Developer Dashboard</h1>
+    <p>Manage schools, platform services and administration.</p>
+  </div>
+
+  <div class="grid">
+    <div class="stat blue"><strong id="totalSchools">0</strong>Total Schools</div>
+    <div class="stat green"><strong id="approvedSchools">0</strong>Approved Schools</div>
+    <div class="stat orange"><strong id="pendingSchools">0</strong>Pending Approval</div>
+    <div class="stat red"><strong id="suspendedSchools">0</strong>Suspended Schools</div>
+    <div class="stat purple"><strong id="totalUsers">—</strong>Total Users</div>
+    <div class="stat teal"><strong id="activeSubs">—</strong>Active Subscriptions</div>
+    <div class="stat gray"><strong id="expiredSubs">—</strong>Expired Subscriptions</div>
+    <div class="stat blue"><strong id="rejectedSchools">0</strong>Rejected Schools</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Recent Registrations</h2>
+      <button class="btn" data-goto="schools">View All Schools</button>
     </div>
-    <div id="connectionState" class="muted">Connecting to Supabase...</div>
-    <div id="userLabel">Platform Developer</div>
-  </header>
+    <div class="table-wrap"><table>
+      <thead><tr><th>School</th><th>Code</th><th>Status</th><th>Registered</th><th>Action</th></tr></thead>
+      <tbody id="recentRows"><tr><td colspan="5">Loading...</td></tr></tbody>
+    </table></div>
+  </div>
 
-  <div class="content">
-    <div id="message"></div>
+  <div class="panel">
+    <h2>Quick Actions</h2>
+    <button class="btn" data-goto="register">Register School</button>
+    <button class="btn green" data-goto="schools" data-filter="pending">Review Pending Schools</button>
+    <button class="btn" data-goto="users">User Management</button>
+    <button class="btn" data-goto="reports">Platform Reports</button>
+  </div>
+</section>
 
-    <section id="page-dashboard" class="page">
-      <div class="welcome">
-        <h1>Platform Developer Dashboard</h1>
-        <div>Manage school registrations, approvals and platform activities.</div>
+<section id="page-register" class="page hidden">
+  <div class="panel">
+    <h2>Register School</h2>
+    <p class="notice">A newly registered school starts with pending status.</p>
+    <form id="schoolForm">
+      <div class="form-grid">
+        <div class="field"><label for="schoolName">School Name *</label><input id="schoolName" required></div>
+        <div class="field"><label for="schoolCode">School Code *</label><input id="schoolCode" required></div>
+        <div class="field"><label for="schoolEmail">Email</label><input id="schoolEmail" type="email"></div>
+        <div class="field"><label for="schoolPhone">Phone</label><input id="schoolPhone" type="tel"></div>
+        <div class="field"><label for="schoolAddress">Address</label><input id="schoolAddress"></div>
       </div>
+      <button class="btn" type="submit">Register School</button>
+      <button class="btn gray" type="reset">Clear Form</button>
+    </form>
+  </div>
+</section>
 
-      <div class="grid">
-        <div class="stat blue"><strong id="totalSchools">—</strong>Total Schools</div>
-        <div class="stat green"><strong id="approvedSchools">—</strong>Approved Schools</div>
-        <div class="stat orange"><strong id="pendingSchools">—</strong>Pending Approval</div>
-        <div class="stat red"><strong id="suspendedSchools">—</strong>Suspended Schools</div>
-        <div class="stat purple"><strong id="totalUsers">—</strong>Total Users*</div>
-        <div class="stat teal"><strong id="activeSubs">—</strong>Active Subscriptions*</div>
-        <div class="stat slate"><strong id="expiredSubs">—</strong>Expired Subscriptions*</div>
-        <div class="stat blue"><strong id="rejectedSchools">—</strong>Rejected Schools</div>
+<section id="page-schools" class="page hidden">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Registered Schools</h2>
+      <button class="btn" data-goto="register">+ Register School</button>
+    </div>
+    <div class="filters">
+      <input id="schoolSearch" placeholder="Search school name or code">
+      <select id="statusFilter">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+        <option value="suspended">Suspended</option>
+      </select>
+      <button class="btn" id="refreshSchools">Refresh</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>School</th><th>Code</th><th>Email</th><th>Phone</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody id="schoolRows"><tr><td colspan="7">Loading...</td></tr></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="page-edit-school" class="page hidden">
+  <div class="panel">
+    <h2>Edit School Details</h2>
+    <p class="notice">Select an existing school, then edit its information.</p>
+    <form id="editSchoolForm">
+      <div class="field"><label for="editSchoolSelect">School</label><select id="editSchoolSelect" required><option value="">Select school</option></select></div>
+      <div class="form-grid">
+        <div class="field"><label for="editName">School Name</label><input id="editName" required></div>
+        <div class="field"><label for="editCode">School Code</label><input id="editCode" required></div>
+        <div class="field"><label for="editEmail">Email</label><input id="editEmail" type="email"></div>
+        <div class="field"><label for="editPhone">Phone</label><input id="editPhone"></div>
+        <div class="field"><label for="editAddress">Address</label><input id="editAddress"></div>
       </div>
+      <button class="btn" type="submit">Save School Changes</button>
+      <button class="btn gray" type="reset">Clear</button>
+    </form>
+  </div>
+</section>
 
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Recent School Registrations</h2>
-          <button class="btn" data-goto="schools">View All Schools</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>School</th><th>Registration Number</th><th>County</th>
-              <th>Status</th><th>Registered</th><th>Actions</th>
-            </tr></thead>
-            <tbody id="recentRows">
-              <tr><td colspan="6">Loading schools...</td></tr>
-            </tbody>
-          </table>
-        </div>
+<section id="page-users" class="page hidden">
+  <div class="panel">
+    <h2>Users and School Administrators</h2>
+    <form id="userForm">
+      <div class="form-grid">
+        <div class="field"><label for="userName">Full Name</label><input id="userName" required></div>
+        <div class="field"><label for="userEmail">Email</label><input id="userEmail" type="email" required></div>
+        <div class="field"><label for="userRole">Role</label><select id="userRole"><option>School Administrator</option><option>Teacher</option><option>Finance Officer</option><option>Platform Support</option></select></div>
+        <div class="field"><label for="userSchool">School</label><select id="userSchool"><option value="">Select school</option></select></div>
       </div>
-      <p class="muted">* User and subscription statistics require their corresponding tables and permissions to be configured.</p>
-    </section>
+      <button class="btn" type="submit">Prepare User Registration</button>
+    </form>
+    <p class="notice">This form currently prepares the details only. User accounts must be created through Supabase Auth and a secure administrator workflow.</p>
+    <div id="userPreview"></div>
+  </div>
+</section>
 
-    <section id="page-register" class="page hidden">
-      <div class="panel">
-        <h2>Register a School</h2>
-        <div class="notice">New schools should be registered with a pending status and approved before receiving access.</div>
-        <form id="schoolForm">
-          <div class="form-grid">
-            <div class="field">
-              <label for="schoolName">School Name</label>
-              <input id="schoolName" required>
-            </div>
-            <div class="field">
-              <label for="regNumber">Registration Number</label>
-              <input id="regNumber" required>
-            </div>
-            <div class="field">
-              <label for="county">County</label>
-              <input id="county" required>
-            </div>
-            <div class="field">
-              <label for="schoolLevel">School Level</label>
-              <select id="schoolLevel" required>
+<section id="page-subscriptions" class="page hidden">
+  <div class="panel">
+    <div class="panel-head"><h2>Subscriptions</h2><button class="btn" data-goto="subscription-form">New Subscription</button></div>
+    <div class="filters">
+      <input id="subscriptionSearch" placeholder="Search school name">
+      <select id="subscriptionFilter"><option value="">All</option><option value="active">Active</option><option value="expired">Expired</option><option value="pending">Pending</option></select>
+    </div>
+    <div id="subscriptionList" class="notice">Subscription records will appear after the subscription database is connected.</div>
+  </div>
+</section>
+
+<section id="page-subscription-form" class="page hidden">
+  <div class="panel">
+    <h2>Create or Update Subscription</h2>
+    <form id="subscriptionForm">
+      <div class="form-grid">
+        <div class="field"><label for="subSchool">School</label><select id="subSchool" required><option value="">Select school</option></select></div>
+        <div class="field"><label for="subPlan">Plan</label><select id="subPlan"><option>Basic</option><option>Standard</option><option>Premium</option></select></div>
+        <div class="field"><label for="subStatus">Status</label><select id="subStatus"><option>pending</option><option>active</option><option>expired</option></select></div>
+        <div class="field"><label for="subExpiry">Expiry Date</label><input id="subExpiry" type="date"></div>
+      </div>
+      <button class="btn" type="submit">Prepare Subscription</button>
+    </form>
+    <p class="notice">No subscription or payment is saved yet. We will connect this form after verifying the subscription table.</p>
+    <div id="subscriptionPreview"></div>
+  </div>
+</section>
+
+<section id="page-plans" class="page hidden">
+  <div class="panel">
+    <h2>Manage Subscription Plans</h2>
+    <form id="planForm">
+      <div class="form-grid">
+        <div class="field"><label for="planName">Plan Name</label><input id="planName" required></div>
+        <div class="field"><label for="planPrice">Price</label><input id="planPrice" type="number" min="0" step="0.01" required></div>
+        <div class="field"><label for="planDuration">Duration in Days</label><input id="planDuration" type="number" min="1" value="30" required></div>
+        <div class="field"><label for="planDescription">Description</label><input id="planDescription"></div>
+      </div>
+      <button class="btn" type="submit">Prepare Plan</button>
+    </form>
+    <div id="planPreview"></div>
+  </div>
+</section>
+
+<section id="page-activity" class="page hidden">
+  <div class="panel">
+    <h2>Activity Logs</h2>
+    <input id="activitySearch" placeholder="Search this session's activity">
+    <div class="table-wrap"><table><thead><tr><th>Time</th><th>Activity</th></tr></thead><tbody id="activityRows"></tbody></table></div>
+    <p class="muted">These are actions recorded in this browser session, not permanent database audit logs.</p>
+  </div>
+</section>
+
+<section id="page-reports" class="page hidden">
+  <div class="panel">
+    <h2>Platform Reports</h2>
+    <p>Report figures below come from the schools loaded from Supabase.</p>
+    <div id="reportSummary"></div>
+    <button class="btn" id="exportSchools">Export Schools CSV</button>
+    <button class="btn gray" id="printReport">Print Report</button>
+  </div>
+</section>
+
+<section id="page-notifications" class="page hidden">
+  <div class="panel">
+    <h2>Notifications</h2>
+    <form id="notificationForm">
+      <div class="field"><label for="noticeTitle">Title</label><input id="noticeTitle" required></div>
+      <div class="field"><label for="noticeMessage">Message</label><textarea id="noticeMessage" required></textarea></div>
+      <div class="field"><label for="noticeAudience">Audience</label><select id="noticeAudience"><option>All Schools</option><option>Approved Schools</option><option>Pending Schools</option><option>Administrators</option></select></div>
+      <button class="btn" type="submit">Preview Notification</button>
+    </form>
+    <div id="notificationPreview"></div>
+    <p class="notice">This previews a notification only. Delivery will be enabled when we connect a notification service and database table.</p>
+  </div>
+</section>
+
+<section id="page-settings" class="page hidden">
+  <div class="panel">
+    <h2>Platform Settings</h2>
+    <form id="settingsForm">
+      <div class="field"><label for="platformName">Platform Name</label><input id="platformName" value="My School System"></div>
+      <div class="field"><label for="supportEmail">Support Email</label><input id="supportEmail" type="email"></div>
+      <div class="field"><label for="defaultCurrency">Currency</label><select id="defaultCurrency"><option>KES</option><option>USD</option></select></div>
+      <button class="btn" type="submit">Save Local Preview</button>
+    </form>
+    <div id="settingsPreview"></div>
+    <p class="muted">Settings are not yet persisted to Supabase.</p>
+  </div>
+</section>
+
+<section id="page-support" class="page hidden">
+  <div class="panel">
+    <h2>Support Requests</h2>
+    <form id="supportForm">
+      <div class="field"><label for="supportSubject">Subject</label><input id="supportSubject" required></div>
+      <div class="field"><label for="supportCategory">Category</label><select id="supportCategory"><option>Technical Issue</option><option>School Registration</option><option>Account Access</option><option>Subscription</option><option>Other</option></select></div>
+      <div class="field"><label for="supportDescription">Description</label><textarea id="supportDescription" required></textarea></div>
+      <button class="btn" type="submit">Preview Support Request</button>
+    </form>
+    <div id="supportPreview"></div>
+    <p class="notice">Support requests will be saved when the support database is connected.</p>
+  </div>
+</section>
+
+<section id="page-connection" class="page hidden">
+  <div class="panel">
+    <h2>Database Connection</h2>
+    <p id="dbDetails">Checking connection...</p>
+    <button class="btn" id="testConnection">Test Supabase Connection</button>
+  </div>
+</section>
+
+<section id="page-security" class="page hidden">
+  <div class="panel">
+    <h2>Security Settings</h2>
+    <p>Review the security requirements for the platform.</p>
+    <ul>
+      <li>Enable Row Level Security on protected tables.</li>
+      <li>Restrict school approval and suspension to authorized developers.</li>
+      <li>Use Supabase Auth to identify signed-in users.</li>
+      <li>Never expose a service-role or secret key in browser code.</li>
+      <li>Protect each school's records from other schools.</li>
+    </ul>
+    <p class="notice">This page provides security guidance; it does not automatically change database policies.</p>
+  </div>
+</section>
+
+</div>
+<footer>My School System · Platform Developer · Supabase</footer>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+const SUPABASE_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+let schools = [];
+let currentUser = null;
+let activities = [];
+
+function msg(text, error=false) {
+  $("message").textContent = text || "";
+  $("message").style.color = error ? "#b91c1c" : "#047857";
+}
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+function statusOf(s) { return String(s.status || "pending").toLowerCase().trim(); }
+function dateOf(v) {
+  if(!v) return "—";
+choolLevel" required>
                 <option value="">Select level</option>
                 <option>Primary</option>
                 <option>Junior School</option>
