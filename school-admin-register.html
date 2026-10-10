@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Administrator Registration | My School System</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#123b70;color:white;padding:22px;text-align:center}
+main{max-width:520px;margin:28px auto;padding:0 15px}
+.card{background:white;padding:25px;border-radius:14px;box-shadow:0 5px 25px #10204012}
+h2{margin-top:0;color:#123b70}
+label{display:block;font-weight:600;margin:15px 0 7px}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px}
+button{width:100%;padding:13px;margin-top:20px;background:#1758a6;color:white;border:0;border-radius:7px;font-size:16px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6}
+.note{background:#eff6ff;padding:12px;border-radius:7px;font-size:13px;line-height:1.5}
+#message{margin-top:15px;line-height:1.5;overflow-wrap:anywhere}
+.small{font-size:13px;color:#64748b}
+a{color:#1758a6}
+</style>
+</head>
+<body>
+<header>
+  <h1>My School System</h1>
+  <p>School Administrator Registration</p>
+</header>
+
+<main>
+<section class="card">
+<h2>Create your account</h2>
+<p class="small">Register to manage your school. Access requires developer approval.</p>
+
+<form id="registerForm">
+<label for="fullName">Full name</label>
+<input id="fullName" required autocomplete="name" placeholder="Enter your full name">
+
+<label for="school">Select approved school</label>
+<select id="school" required>
+<option value="">Loading approved schools...</option>
+</select>
+
+<label for="identifierType">Registration/login identifier</label>
+<select id="identifierType" required>
+<option value="email">Email address</option>
+<option value="username">Username</option>
+<option value="phone">Phone number</option>
+</select>
+
+<div id="identifierLabel">
+<label for="identifier">Email address</label>
+<input id="identifier" required type="email" autocomplete="username"
+placeholder="you@example.com">
+</div>
+
+<div id="contactEmailBox" hidden>
+<label for="contactEmail">Contact email (required for username accounts)</label>
+<input id="contactEmail" type="email" autocomplete="email"
+placeholder="you@example.com">
+<p class="small">Supabase uses this email for the underlying account. Username login also needs a secure login resolver.</p>
+</div>
+
+<label for="password">Create password</label>
+<input id="password" type="password" required minlength="8"
+autocomplete="new-password" placeholder="At least 8 characters">
+
+<label for="confirmPassword">Confirm password</label>
+<input id="confirmPassword" type="password" required minlength="8"
+autocomplete="new-password" placeholder="Enter password again">
+
+<div class="note">
+<strong>Approval process</strong><br>
+Your registration will remain pending until the system developer approves it.
+Do not register for a school you are not authorized to manage.
+</div>
+
+<button id="submitBtn" type="submit">Submit Registration</button>
+<div id="message" role="status" aria-live="polite"></div>
+</form>
+
+<p class="small">Already registered? <a href="login.html">Go to login</a></p>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const form = document.getElementById("registerForm");
+const type = document.getElementById("identifierType");
+const identifier = document.getElementById("identifier");
+const contactBox = document.getElementById("contactEmailBox");
+const contactEmail = document.getElementById("contactEmail");
+const message = document.getElementById("message");
+const submitBtn = document.getElementById("submitBtn");
+
+function setMessage(text, ok=false) {
+  message.textContent = text;
+  message.style.color = ok ? "#166534" : "#b91c1c";
+}
+
+function updateIdentifierField() {
+  const mode = type.value;
+  contactBox.hidden = mode !== "username";
+  contactEmail.required = mode === "username";
+  identifier.value = "";
+
+  const label = document.querySelector("#identifierLabel label");
+  label.textContent = mode === "email" ? "Email address"
+    : mode === "phone" ? "Phone number (include country code)"
+    : "Choose a username";
+
+  identifier.type = mode === "email" ? "email" : "text";
+  identifier.autocomplete = "username";
+  identifier.placeholder = mode === "email" ? "you@example.com"
+    : mode === "phone" ? "+2547XXXXXXXX"
+    : "Choose a unique username";
+  identifier.required = true;
+}
+
+type.addEventListener("change", updateIdentifierField);
+
+async function loadSchools() {
+  const schoolSelect = document.getElementById("school");
+  const { data, error } = await db
+    .from("msys_schools")
+    .select("id, name")
+    .eq("status", "approved")
+    .order("name");
+
+  schoolSelect.replaceChildren(new Option("Select your approved school", ""));
+
+  if (error) {
+    setMessage("Could not load schools. Check the msys_schools read policy.");
+    return;
+  }
+
+  for (const school of data || []) {
+    schoolSelect.add(new Option(school.name, school.id));
+  }
+
+  if (!data || data.length === 0) {
+    setMessage("No approved schools are available for registration yet.");
+  }
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setMessage("");
+
+  const fullName = document.getElementById("fullName").value.trim();
+  const schoolId = document.getElementById("school").value;
+  const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const mode = type.value;
+  const entered = identifier.value.trim();
+  const username = mode === "username" ? entered.toLowerCase() : null;
+
+  if (password !== confirmPassword) {
+    setMessage("The passwords do not match.");
+    return;
+  }
+
+  if (password.length < 8) {
+    setMessage("Use a password with at least 8 characters.");
+    return;
+  }
+
+  if (!schoolId) {
+    setMessage("Please select an approved school.");
+    return;
+  }
+
+  let authCredentials;
+  let emailForProfile = null;
+  let phoneForProfile = null;
+
+  if (mode === "email") {
+    emailForProfile = entered.toLowerCase();
+    authCredentials = {
+      email: emailForProfile,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: "school_admin",
+          school_id: schoolId,
+          username: null
+        }
+      }
+    };
+  } else if (mode === "username") {
+    emailForProfile = contactEmail.value.trim().toLowerCase();
+
+    if (!emailForProfile) {
+      setMessage("Enter a contact email for your username account.");
+      return;
+    }
+
+    authCredentials = {
+      email: emailForProfile,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          username,
+          role: "school_admin",
+          school_id: schoolId
+        }
+      }
+    };
+  } else {
+    phoneForProfile = entered;
+
+    if (!/^\+[1-9]\d{7,14}$/.test(entered)) {
+      setMessage("Enter your phone in international format, e.g. +2547XXXXXXXX.");
+      return;
+    }
+
+    authCredentials = {
+      phone: entered,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: "school_admin",
+          school_id: schoolId
+        }
+      }
+    };
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Submitting...";
+
+  try {
+    // Supabase Authentication handles the password securely.
+    const { data: authData, error: authError } =
+      await db.auth.signUp(authCredentials);
+
+    if (authError) throw authError;
+
+    if (!authData.user) {
+      throw new Error("Supabase did not return an account. Please try again.");
+    }
+
+    // This profile write may require a secure registration function or
+    // a carefully restricted RLS policy, depending on your current setup.
+    const profile = {
+      id: authData.user.id,
+      full_name: fullName,
+      email: emailForProfile,
+      phone: phoneForProfile,
+      school_id: schoolId,
+      role: "school_admin",
+      status: "pending"
+    };
+
+    if (username) profile.username = username;
+
+    const { error: profileError } = await db
+      .from("msys_user_profiles")
+      .upsert(profile, { onConflict: "id" });
+
+    if (profileError) {
+      throw new Error(
+        "The authentication account was created, but the pending profile " +
+        "could not be saved. Contact the developer to finish secure registration. " +
+        profileError.message
+      );
+    }
+
+    form.reset();
+    updateIdentifierField();
+    setMessage(
+      "Registration submitted. Your account is pending developer approval. " +
+      "If email confirmation is enabled, complete that step too.",
+      true
+    );
+  } catch (error) {
+    setMessage(error.message || "Registration failed.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit Registration";
+  }
+});
+
+updateIdentifierField();
+loadSchools();
+</script>
+</body>
+</html>
