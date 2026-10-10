@@ -1,195 +1,91 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My School System | Developer Portal</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<title>My School System | Developer Console</title>
 <style>
-:root{--navy:#0b2043;--blue:#1769e8;--bg:#f3f6fb;--border:#dfe6ef;--text:#192b49}
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-.layout{display:flex;min-height:100vh}
-.sidebar{width:250px;flex-shrink:0;background:var(--navy);color:white;padding:15px 11px}
-.brand{font-size:19px;font-weight:bold;padding:9px 10px 18px}
-.brand small{display:block;color:#60d5ff;font-size:12px;margin-top:5px}
-.nav-heading{font-size:11px;color:#70d5ff;margin:19px 8px 7px;text-transform:uppercase}
-.nav{display:block;width:100%;padding:10px;border:0;border-radius:6px;background:transparent;color:#edf3ff;text-align:left;margin:2px 0;font-size:13px}
-.nav:hover,.nav.active{background:#1558b2}
-.main{flex:1;min-width:0}
-.topbar{background:white;padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.topbar input{width:min(390px,100%)}
-.content{padding:20px}
-h1{font-size:24px;margin:0 0 8px}
-h2{font-size:19px;margin:0 0 15px}
-h3{font-size:15px;margin:0 0 12px}
-p{line-height:1.5}
-.muted{font-size:12px;color:#64748b}
-.welcome{background:#e2efff;border-left:5px solid var(--blue);padding:20px;border-radius:9px;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
-.stat{padding:17px;border-radius:9px;color:white;min-height:95px}
-.stat strong{display:block;font-size:26px;margin-bottom:7px}
-.blue{background:#1769e8}.green{background:#07965c}.orange{background:#e99008}.red{background:#df3345}.purple{background:#7143d8}.teal{background:#078f91}.gray{background:#526176}
-.panel{background:white;border:1px solid var(--border);border-radius:9px;padding:18px;margin-bottom:16px}
-.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.btn{background:var(--blue);color:white;border:0;border-radius:6px;padding:9px 12px;font-size:13px;margin:2px}
-.btn.green{background:#07965c}.btn.orange{background:#e99008}.btn.red{background:#d92d43}.btn.gray{background:#526176}
-.btn:hover{filter:brightness(.94)}
-input,select,textarea{width:100%;min-width:0;padding:10px;border:1px solid #cbd5e1;border-radius:6px;background:white}
-textarea{resize:vertical;min-height:85px}
-.filters,.actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.filters{margin-bottom:14px}.filters input{flex:1;min-width:150px}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:11px 9px;text-align:left;border-bottom:1px solid var(--border)}
-th{background:#f5f7fb}
-.status{display:inline-block;padding:5px 8px;border-radius:20px;font-size:12px;background:#e2e8f0}
-.status.approved,.status.active{background:#d1fae5;color:#065f46}
-.status.pending{background:#fef3c7;color:#92400e}
-.status.rejected,.status.suspended,.status.expired{background:#fee2e2;color:#991b1b}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
-.field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.field label{font-size:13px;font-weight:bold}
-.notice{padding:11px;border-radius:6px;background:#eff6ff;color:#1e40af;font-size:13px}
-.hidden{display:none!important}
-#message{white-space:pre-wrap;margin-bottom:12px;font-size:14px}
-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:12px;color:#64748b}
-@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:650px){
- .layout{display:block}.sidebar{width:100%;padding:11px}
- .nav-heading{margin-top:12px}
- .nav{display:inline-block;width:auto;padding:9px}
- .content{padding:11px}.topbar{padding:11px}
- .form-grid{grid-template-columns:1fr}
- .stat{padding:12px}.stat strong{font-size:22px}
-}
+:root{--navy:#111c3a;--navy2:#1b2a52;--blue:#4169e1;--cyan:#28c7d9;--bg:#f4f7fc;--card:#fff;--text:#17233d;--muted:#72809a;--line:#e5eaf3;--green:#14805e;--red:#c43d50;--amber:#a96b08;--shadow:0 8px 28px rgba(27,42,82,.07)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}.sidebar{background:linear-gradient(180deg,var(--navy),#18264b);color:#fff;padding:22px 14px;display:flex;flex-direction:column;gap:18px}.brand{display:flex;align-items:center;gap:12px;padding:2px 8px 18px;border-bottom:1px solid #ffffff20}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--cyan),#6284ff);display:grid;place-items:center;font-size:22px;font-weight:900}.brand strong{display:block;font-size:15px}.brand small{color:#b9c7e7}.nav-label{font-size:10px;letter-spacing:1.6px;color:#94a5cd;padding:4px 12px}.nav{display:grid;gap:5px}.nav button{display:flex;align-items:center;gap:11px;text-align:left;border:0;border-radius:10px;background:transparent;color:#d6def2;padding:11px 12px;font-size:13px}.nav button:hover,.nav button.active{background:#ffffff17;color:#fff}.nav button.active{box-shadow:inset 3px 0 var(--cyan)}.nav .ico{width:21px;text-align:center;font-size:16px}.side-bottom{margin-top:auto;border-top:1px solid #ffffff20;padding:15px 8px 0;font-size:12px;color:#aebce0;line-height:1.7}.main{min-width:0}.topbar{height:76px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;gap:16px}.crumb{font-size:12px;color:var(--muted)}.topbar h1{font-size:20px;margin:3px 0 0}.top-actions{display:flex;align-items:center;gap:10px}.mode{font-size:11px;border-radius:30px;padding:7px 11px;background:#fff4db;color:#8a5b04;border:1px solid #f1dfb6}.avatar{width:36px;height:36px;border-radius:50%;background:#e7edff;color:#3152b6;display:grid;place-items:center;font-weight:800}.content{padding:26px 28px 42px;max-width:1600px;margin:auto}.welcome{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}.welcome h2{font-size:24px;margin:0 0 6px}.welcome p{margin:0;color:var(--muted);font-size:13px}.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn:hover{filter:brightness(.98);transform:translateY(-1px)}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn.success{background:var(--green);border-color:var(--green);color:#fff}.btn.danger{background:#fff0f1;color:var(--red);border-color:#f4cdd2}.btn.small{padding:6px 9px;font-size:11px}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:20px}.stat,.panel,.module-card{background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}.stat{padding:18px}.stat-head{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}.stat-icon{width:34px;height:34px;border-radius:10px;background:#eef2ff;display:grid;place-items:center;font-size:17px}.stat strong{display:block;font-size:27px;margin:14px 0 4px}.stat small{font-size:11px;color:var(--muted)}.layout-two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(270px,1fr);gap:17px}.panel{padding:19px;margin-bottom:17px;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.panel-head h3{font-size:15px;margin:0}.panel-head p{font-size:11px;color:var(--muted);margin:5px 0 0}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.field,select,textarea{border:1px solid #dfe5f0;background:#fff;border-radius:9px;padding:10px 11px;color:var(--text);outline:none;min-width:0}.field:focus,select:focus,textarea:focus{border-color:#8aa2ff;box-shadow:0 0 0 3px #4169e118}.filters .field{flex:1;min-width:150px}.filters select{min-width:130px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);background:#f8faff;padding:12px 10px}td{padding:12px 10px;border-bottom:1px solid #edf0f6}tr:last-child td{border-bottom:0}.school-name{font-weight:750}.subline{font-size:10px;color:var(--muted);margin-top:4px}.badge{display:inline-block;padding:5px 8px;border-radius:20px;font-size:10px;font-weight:800;text-transform:capitalize}.badge.pending{background:#fff3d8;color:#9a6505}.badge.approved,.badge.active,.badge.resolved{background:#e1f7ee;color:#147453}.badge.rejected,.badge.suspended,.badge.inactive{background:#ffe8eb;color:#b02e44}.badge.open,.badge.in-progress{background:#e7efff;color:#3159bc}.actions{display:flex;gap:5px}.empty{text-align:center;padding:28px;color:var(--muted)}.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.quick{border:1px solid var(--line);border-radius:11px;padding:13px;text-align:left;background:#fff;display:flex;gap:10px;align-items:center}.quick:hover{border-color:#a8b8ff;background:#f9faff}.quick .qicon{font-size:19px}.quick strong{font-size:12px;display:block}.quick small{font-size:10px;color:var(--muted)}.activity{display:grid;gap:14px}.activity-item{display:flex;gap:10px;align-items:flex-start}.dot{width:9px;height:9px;border-radius:50%;background:var(--blue);margin-top:4px;flex-shrink:0}.activity-item strong{font-size:12px;display:block}.activity-item small{font-size:10px;color:var(--muted)}.page-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px}.page-title h2{font-size:22px;margin:0}.page-title p{font-size:12px;color:var(--muted);margin:5px 0 0}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.form-field{display:grid;gap:6px;font-size:12px;font-weight:700}.form-field input,.form-field select,.form-field textarea{width:100%;font-weight:400}.form-field.full{grid-column:1/-1}.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:17px}.plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.plan{padding:20px;border:1px solid var(--line);border-radius:14px;background:#fff}.plan h3{margin:0 0 8px}.price{font-size:27px;font-weight:850;margin:15px 0}.plan p,.muted{font-size:12px;color:var(--muted)}.module-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.module-card{padding:17px}.module-card .bigico{font-size:23px}.module-card h3{font-size:14px;margin:11px 0 6px}.module-card p{font-size:11px;line-height:1.6;color:var(--muted);min-height:34px}.module-card button{margin-top:8px}.notice{border:1px solid #f0dfb6;background:#fff9e9;color:#805a0a;padding:12px 14px;border-radius:10px;font-size:12px;line-height:1.5;margin-bottom:16px}.notice.info{border-color:#d7e2ff;background:#f3f6ff;color:#3554a1}.hidden{display:none!important}.toast-wrap{position:fixed;right:18px;top:18px;z-index:1000;display:grid;gap:8px}.toast{background:#142345;color:white;padding:12px 16px;border-radius:10px;box-shadow:0 8px 25px #0002;font-size:12px;max-width:330px;animation:slide .2s ease}.toast.bad{background:#a82f42}.toast.good{background:#117455}@keyframes slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}.modal-backdrop{position:fixed;inset:0;background:#0d183c88;z-index:900;display:grid;place-items:center;padding:18px}.modal{width:min(600px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 80px #0003}.modal h2{margin:0 0 18px;font-size:19px}.modal-top{display:flex;align-items:center;justify-content:space-between}.xbtn{border:0;background:#f1f4fa;border-radius:8px;width:32px;height:32px;font-size:19px}.mobile-menu{display:none}.footer-note{text-align:center;color:var(--muted);font-size:10px;padding:10px}.connection{font-size:11px;color:var(--muted);margin-top:8px}
+@media(max-width:1050px){.app{grid-template-columns:220px minmax(0,1fr)}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.layout-two{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.plan-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.app{display:block}.sidebar{position:fixed;z-index:700;inset:0 auto 0 0;width:260px;transform:translateX(-105%);transition:transform .2s;box-shadow:10px 0 30px #0002}.sidebar.open{transform:translateX(0)}.topbar{height:66px;padding:0 15px}.topbar h1{font-size:17px}.content{padding:18px 14px 30px}.welcome{align-items:flex-start;flex-direction:column}.stats{gap:9px}.stat{padding:13px}.stat strong{font-size:23px}.module-grid,.quick-grid,.form-grid{grid-template-columns:1fr}.top-actions .mode{display:none}.mobile-menu{display:inline-flex}.page-title{align-items:flex-start;flex-direction:column}.panel{padding:13px}.table-wrap{margin:0 -5px}.actions{flex-wrap:wrap}}
 </style>
 </head>
-
 <body>
-<div class="layout">
-<aside class="sidebar">
-  <div class="brand">🎓 My School System<small>Platform Developer</small></div>
-
-  <button class="nav active" data-page="dashboard">🏠 Dashboard</button>
-
-  <div class="nav-heading">School Management</div>
-  <button class="nav" data-page="register">➕ Register School</button>
-  <button class="nav" data-page="schools">🏫 Registered Schools</button>
-  <button class="nav" data-page="schools" data-filter="pending">✅ Approve Schools</button>
-  <button class="nav" data-page="schools" data-filter="rejected">❌ Rejected Schools</button>
-  <button class="nav" data-page="edit-school">✏️ Edit School Details</button>
-  <button class="nav" data-page="schools" data-filter="suspended">⏸ Suspended Schools</button>
-  <button class="nav" data-page="schools" data-filter="approved">▶ Active Schools</button>
-  <button class="nav" data-page="users">👥 School Administrators</button>
-
-  <div class="nav-heading">Subscriptions</div>
-  <button class="nav" data-page="subscriptions">💳 View Subscriptions</button>
-  <button class="nav" data-page="subscription-form">✓ Activate Subscription</button>
-  <button class="nav" data-page="subscription-form">📅 Set Expiry Dates</button>
-  <button class="nav" data-page="subscription-form">🔄 Renew Subscription</button>
-  <button class="nav" data-page="subscriptions" data-filter="expired">⚠ Expired Subscriptions</button>
-  <button class="nav" data-page="plans">📚 Manage Plans</button>
-
-  <div class="nav-heading">Platform Management</div>
-  <button class="nav" data-page="users">👥 Users and Roles</button>
-  <button class="nav" data-page="activity">◷ Activity Logs</button>
-  <button class="nav" data-page="reports">📊 Platform Reports</button>
-  <button class="nav" data-page="notifications">🔔 Notifications</button>
-  <button class="nav" data-page="settings">⚙ Platform Settings</button>
-  <button class="nav" data-page="support">🎧 Support Requests</button>
-  <button class="nav" data-page="connection">🗄 Database Connection</button>
-  <button class="nav" data-page="security">🛡 Security Settings</button>
-  <button class="nav" id="logout">↪ Log Out</button>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="logo">M</div><div><strong>My School System</strong><small>Developer Console</small></div></div>
+  <div>
+    <div class="nav-label">MAIN MENU</div>
+    <nav class="nav" id="nav">
+      <button class="active" data-page="overview"><span class="ico">▦</span>Overview</button>
+      <button data-page="schools"><span class="ico">🏫</span>School Management</button>
+      <button data-page="users"><span class="ico">♙</span>User Management</button>
+      <button data-page="subscriptions"><span class="ico">💳</span>Subscriptions & Plans</button>
+      <button data-page="notifications"><span class="ico">🔔</span>Notifications</button>
+      <button data-page="support"><span class="ico">🎧</span>Support Center</button>
+      <button data-page="reports"><span class="ico">📊</span>Reports & Analytics</button>
+      <button data-page="activity"><span class="ico">🕘</span>Activity Logs</button>
+      <button data-page="settings"><span class="ico">⚙</span>Platform Settings</button>
+      <button data-page="modules"><span class="ico">▤</span>All Modules</button>
+      <button data-page="connection"><span class="ico">🔌</span>Database Connection</button>
+    </nav>
+  </div>
+  <div class="side-bottom">My School System<br><span id="sideMode">Interactive preview mode</span><br>Version 1.0</div>
 </aside>
-
 <main class="main">
 <header class="topbar">
-  <input id="globalSearch" placeholder="Search schools by name or code">
-  <span id="connectionState" class="muted">Checking connection...</span>
-  <span id="userLabel">Developer</span>
+  <div style="display:flex;align-items:center;gap:12px"><button class="btn mobile-menu" id="menuBtn">☰</button><div><div class="crumb">Developer / <span id="crumb">Overview</span></div><h1 id="topTitle">Platform Overview</h1></div></div>
+  <div class="top-actions"><span class="mode" id="modeBadge">● Preview mode</span><button class="btn" id="refreshBtn">↻ Refresh</button><div class="avatar" title="Developer">D</div></div>
 </header>
-
-<div class="content">
-<div id="message"></div>
-
-<section id="page-dashboard" class="page">
-  <div class="welcome">
-    <h1>Platform Developer Dashboard</h1>
-    <p>Manage schools, platform services and administration.</p>
-  </div>
-
-  <div class="grid">
-    <div class="stat blue"><strong id="totalSchools">0</strong>Total Schools</div>
-    <div class="stat green"><strong id="approvedSchools">0</strong>Approved Schools</div>
-    <div class="stat orange"><strong id="pendingSchools">0</strong>Pending Approval</div>
-    <div class="stat red"><strong id="suspendedSchools">0</strong>Suspended Schools</div>
-    <div class="stat purple"><strong id="totalUsers">—</strong>Total Users</div>
-    <div class="stat teal"><strong id="activeSubs">—</strong>Active Subscriptions</div>
-    <div class="stat gray"><strong id="expiredSubs">—</strong>Expired Subscriptions</div>
-    <div class="stat blue"><strong id="rejectedSchools">0</strong>Rejected Schools</div>
-  </div>
-
-  <div class="panel">
-    <div class="panel-head">
-      <h2>Recent Registrations</h2>
-      <button class="btn" data-goto="schools">View All Schools</button>
-    </div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>School</th><th>Code</th><th>Status</th><th>Registered</th><th>Action</th></tr></thead>
-      <tbody id="recentRows"><tr><td colspan="5">Loading...</td></tr></tbody>
-    </table></div>
-  </div>
-
-  <div class="panel">
-    <h2>Quick Actions</h2>
-    <button class="btn" data-goto="register">Register School</button>
-    <button class="btn green" data-goto="schools" data-filter="pending">Review Pending Schools</button>
-    <button class="btn" data-goto="users">User Management</button>
-    <button class="btn" data-goto="reports">Platform Reports</button>
-  </div>
-</section>
-
-<section id="page-register" class="page hidden">
-  <div class="panel">
-    <h2>Register School</h2>
-    <p class="notice">A newly registered school starts with pending status.</p>
-    <form id="schoolForm">
-      <div class="form-grid">
-        <div class="field"><label for="schoolName">School Name *</label><input id="schoolName" required></div>
-        <div class="field"><label for="schoolCode">School Code *</label><input id="schoolCode" required></div>
-        <div class="field"><label for="schoolEmail">Email</label><input id="schoolEmail" type="email"></div>
-        <div class="field"><label for="schoolPhone">Phone</label><input id="schoolPhone" type="tel"></div>
-        <div class="field"><label for="schoolAddress">Address</label><input id="schoolAddress"></div>
-      </div>
-      <button class="btn" type="submit">Register School</button>
-      <button class="btn gray" type="reset">Clear Form</button>
-    </form>
-  </div>
-</section>
-
-<section id="page-schools" class="page hidden">
-  <div class="panel">
-    <div class="panel-head">
-      <h2>Registered Schools</h2>
-      <button class="btn" data-goto="register">+ Register School</button>
-    </div>
-    <div class="filters">
-      <input id="schoolSearch" placeholder="Search school name or code">
-      <select id="statusFilter">
-        <option value="">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="approved">Approved</option>
-        <option value="rejected">Rejected</option>
-        <option value="suspended">Suspended</option>
-      </select>
-      <button class="btn" id="refreshSchools">Refresh</button>
-    </div>
-    <div class="table-wrap"><table>
-      <thead><tr><th>School</th><th>Code</th><th>Email</th><th>Phone</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+<div class="content" id="content"></div>
+<div class="footer-note">My School System • Preview changes are stored in this browser only until database connection is configured.</div>
+</main>
+</div>
+<div class="toast-wrap" id="toasts"></div>
+<div id="modalRoot"></div>
+<script>
+'use strict';
+const $=(s,root=document)=>root.querySelector(s);
+const $$=(s,root=document)=>Array.from(root.querySelectorAll(s));
+const STORE='myschool_dev_dashboard_preview_v1';
+const initial={
+ schools:[
+  {id:'SCH-1001',school_code:'MS-1001',school_name:'Green Valley Academy',email:'admin@greenvalley.example',phone:'+254 700 111 222',address:'Nairobi, Kenya',status:'pending',created_at:new Date(Date.now()-86400000).toISOString()},
+  {id:'SCH-1002',school_code:'MS-1002',school_name:'Bright Future School',email:'office@brightfuture.example',phone:'+254 711 222 333',address:'Eldoret, Kenya',status:'approved',created_at:new Date(Date.now()-3*86400000).toISOString()},
+  {id:'SCH-1003',school_code:'MS-1003',school_name:'Hillside Learning Centre',email:'info@hillside.example',phone:'+254 722 333 444',address:'Kisumu, Kenya',status:'pending',created_at:new Date(Date.now()-5*86400000).toISOString()}
+ ],
+ users:[],plans:[
+  {id:'PLAN-1',plan_name:'Basic',monthly_price:500,annual_price:5000,price:500,duration_days:30,active:true,is_active:true,description:'For small schools'},
+  {id:'PLAN-2',plan_name:'Standard',monthly_price:1000,annual_price:10000,price:1000,duration_days:30,active:true,is_active:true,description:'For growing schools'},
+  {id:'PLAN-3',plan_name:'Premium',monthly_price:2000,annual_price:20000,price:2000,duration_days:30,active:true,is_active:true,description:'For larger institutions'}
+ ],
+ subscriptions:[],notifications:[],support:[
+  {id:'TKT-001',subject:'Unable to add learners',message:'Please help us add learners to our school account.',school_id:'SCH-1002',status:'open',created_at:new Date().toISOString()}
+ ],activity:[],settings:{platform_name:'My School System',support_email:'support@example.com',currency:'KES',maintenance_mode:false,allow_registration:true},connected:false
+};
+let state=loadState(),currentPage='overview';
+function loadState(){try{const s=localStorage.getItem(STORE);if(s)return {...structuredClone(initial),...JSON.parse(s)};}catch(e){}return structuredClone(initial)}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(state))}catch(e){}}
+function log(action,details=''){state.activity.unshift({id:'LOG-'+Date.now(),action,details,created_at:new Date().toISOString()});state.activity=state.activity.slice(0,150);save()}
+function toast(message,type=''){const el=document.createElement('div');el.className='toast '+(type==='error'?'bad':type==='success'?'good':'');el.textContent=message;$('#toasts').append(el);setTimeout(()=>el.remove(),3600)}
+function esc(v=''){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmtDate(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?esc(v):d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
+function badge(status){let s=String(status||'pending').toLowerCase().replace(/\s+/g,'-');return `<span class="badge ${esc(s)}">${esc(status||'pending')}</span>`}
+function pageTitle(p){return ({overview:'Platform Overview',schools:'School Management',users:'User Management',subscriptions:'Subscriptions & Plans',notifications:'Notifications',support:'Support Center',reports:'Reports & Analytics',activity:'Activity Logs',settings:'Platform Settings',modules:'All Modules',connection:'Database Connection'})[p]||'Platform Overview'}
+function go(p){currentPage=p;$('#crumb').textContent=pageTitle(p);$('#topTitle').textContent=pageTitle(p);$$('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===p));$('#sidebar').classList.remove('open');render()}
+function stat(label,value,icon,foot){return `<div class="stat"><div class="stat-head"><span>${label}</span><span class="stat-icon">${icon}</span></div><strong>${value}</strong><small>${foot}</small></div>`}
+function panelHead(title,sub='',right=''){return `<div class="panel-head"><div><h3>${title}</h3>${sub?`<p>${sub}</p>`:''}</div>${right}</div>`}
+function schoolTable(rows){if(!rows.length)return `<div class="empty">No schools match your search.</div>`;return `<div class="table-wrap"><table><thead><tr><th>School</th><th>Contact</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows.map(s=>`<tr><td><div class="school-name">${esc(s.school_name)}</div><div class="subline">${esc(s.school_code||s.id)}</div></td><td>${esc(s.email||'—')}<div class="subline">${esc(s.phone||'')}</div></td><td>${fmtDate(s.created_at)}</td><td>${badge(s.status)}</td><td><div class="actions"><button class="btn small" data-action="view-school" data-id="${esc(s.id)}">View</button>${s.status!=='approved'?`<button class="btn small success" data-action="approve-school" data-id="${esc(s.id)}">Approve</button>`:''}${s.status!=='rejected'?`<button class="btn small danger" data-action="reject-school" data-id="${esc(s.id)}">Reject</button>`:''}<button class="btn small" data-action="edit-school" data-id="${esc(s.id)}">Edit</button></div></td></tr>`).join('')}</tbody></table></div>`}
+function overview(){const pending=state.schools.filter(s=>s.status==='pending').length,approved=state.schools.filter(s=>s.status==='approved').length;return `
+<div class="welcome"><div><h2>Welcome, Developer 👋</h2><p>Manage registrations, accounts, subscriptions and platform operations from one place.</p></div><button class="btn primary" data-action="add-school">＋ Register school</button></div>
+<div class="notice info"><strong>Interactive preview:</strong> all dashboard controls work locally. Changes are saved in this browser. Supabase connection is not active in this file yet, so these demo changes do not update your live database.</div>
+<div class="stats">${stat('Total schools',state.schools.length,'🏫','All registered school records')}${stat('Pending approval',pending,'⏳','Waiting for your decision')}${stat('Approved schools',approved,'✓','Approved registrations')}${stat('Support requests',state.support.filter(t=>t.status==='open').length,'🎧','Open support tickets')}</div>
+<div class="layout-two"><section class="panel">${panelHead('Recent school registrations','Review new registrations',`<button class="btn small" data-page-go="schools">View all →</button>`)}${schoolTable([...state.schools].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5))}</section>
+<section class="panel">${panelHead('Quick actions','Common developer tasks')}<div class="quick-grid"><button class="quick" data-action="add-school"><span class="qicon">🏫</span><span><strong>Register school</strong><small>Add a school record</small></span></button><button class="quick" data-page-go="users"><span class="qicon">♙</span><span><strong>Manage users</strong><small>View user directory</small></span></button><button class="quick" data-page-go="subscriptions"><span class="qicon">💳</span><span><strong>Subscription plans</strong><small>Manage pricing plans</small></span></button><button class="quick" data-page-go="notifications"><span class="qicon">🔔</span><span><strong>Send notification</strong><small>Publish an announcement</small></span></button><button class="quick" data-page-go="support"><span class="qicon">🎧</span><span><strong>Support center</strong><small>Resolve school requests</small></span></button><button class="quick" data-page-go="reports"><span class="qicon">📊</span><span><strong>View reports</strong><small>Platform summaries</small></span></button></div></section></div>
+<div class="layout-two"><section class="panel">${panelHead('Latest activity','Actions performed in this browser')}${activityList(state.activity.slice(0,5))}</section><section class="panel">${panelHead('Platform status','Local preview information')}<p class="muted">Dashboard interface <strong style="color:var(--green)">Ready</strong></p><p class="muted">Database connection <strong style="color:var(--amber)">Not connected</strong></p><p class="muted">School approval controls <strong style="color:var(--green)">Working in preview</strong></p><button class="btn" data-page-go="connection">Configure connection →</button></section></div>`}
+function activityList(items){return items.length?`<div class="activity">${items.map(a=>`<div class="activity-item"><span class="dot"></span><div><strong>${esc(a.action)}</strong><small>${esc(a.details||'')} · ${fmtDate(a.created_at)}</small></div></div>`).join('')}</div>`:`<div class="empty">No activity recorded yet.</div>`}
+function schoolsPage(){return `<div class="page-title"><div><h2>School Management</h2><p>Review registrations and manage school recad><tr><th>School</th><th>Code</th><th>Email</th><th>Phone</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
       <tbody id="schoolRows"><tr><td colspan="7">Loading...</td></tr></tbody>
     </table></div>
   </div>
