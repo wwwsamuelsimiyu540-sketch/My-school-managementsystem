@@ -1,104 +1,418 @@
-<!DOCTYPE html><html lang="en">
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>School Administrator | My School System</title><style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Administrators | My School System</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#102746;--blue:#2563eb;--bg:#f3f6fb;--line:#e2e8f0}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
-header{background:#102442;color:white;padding:20px}
-header h2{margin:0}
-.layout{display:flex;min-height:100vh}
-aside{width:230px;background:#172b4d;padding:15px;flex-shrink:0}
-aside a{display:block;color:white;text-decoration:none;padding:12px;margin-bottom:5px;border-radius:6px}
-aside a:hover{background:#2563eb}
-main{padding:22px;flex:1;min-width:0}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px}
-.card,.panel{background:white;padding:20px;border-radius:10px;margin-bottom:18px;box-shadow:0 2px 8px #0001}
-.card h3{font-size:14px;color:#64748b}
-.card strong{font-size:26px}
-.modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
-.module{background:white;padding:20px;border-radius:9px;border:1px solid #e2e8f0}
-.module button{background:#2563eb;color:white;border:0;padding:10px;border-radius:5px;cursor:pointer}
-.notice{background:#dbeafe;padding:12px;border-radius:6px}
-@media(max-width:700px){
-.layout{display:block}
-aside{width:100%}
-main{padding:12px}
-}
-</style></head><body><header>
-<h2>MY SCHOOL SYSTEM</h2>
-<p>School Administration Portal</p>
-</header><div class="layout"><aside>
-<a href="school-admin.html">Dashboard</a>
-<a href="students.html">Students</a>
-<a href="teachers.html">Teachers & Staff</a>
-<a href="academics.html">Academics</a>
-<a href="attendance.html">Attendance</a>
-<a href="finance.html">Fees & Payments</a>
-<a href="parents.html">Parents Portal</a>
-<a href="reports.html">Reports</a>
-<a href="settings.html">School Settings</a>
-<a href="index.html">Exit Dashboard</a>
-</aside><main><h1>School Administrator Dashboard</h1>
-<p>Manage your school's daily activities from one place.</p><div class="cards">
-<div class="card">
-<h3>Total Students</h3>
-<strong>—</strong>
-</div><div class="card">
-<h3>Total Teachers</h3>
-<strong>—</strong>
-</div><div class="card">
-<h3>Fees Collected</h3>
-<strong>—</strong>
-</div><div class="card">
-<h3>Attendance Today</h3>
-<strong>—</strong>
-</div>
-</div><div class="panel">
-<h2>School Management Modules</h2><div class="modules"><div class="module">
-<h3>Student Management</h3>
-<p>Admissions, student profiles and class allocation.</p>
-<button onclick="openPage('students.html')">Open</button>
-</div><div class="module">
-<h3>Teachers & Staff</h3>
-<p>Manage staff profiles and assignments.</p>
-<button onclick="openPage('teachers.html')">Open</button>
-</div><div class="module">
-<h3>Academics</h3>
-<p>Classes, subjects, examinations and results.</p>
-<button onclick="openPage('academics.html')">Open</button>
-</div><div class="module">
-<h3>Attendance</h3>
-<p>Record and review student attendance.</p>
-<button onclick="openPage('attendance.html')">Open</button>
-</div><div class="module">
-<h3>Fees & Payments</h3>
-<p>Manage fee structures, balances and payments.</p>
-<button onclick="openPage('finance.html')">Open</button>
-</div><div class="module">
-<h3>Parents Portal</h3>
-<p>Provide parents with access to learner updates.</p>
-<button onclick="openPage('parents.html')">Open</button>
-</div><div class="module">
-<h3>Reports</h3>
-<p>Review school performance and administrative reports.</p>
-<button onclick="openPage('reports.html')">Open</button>
-</div><div class="module">
-<h3>School Settings</h3>
-<p>Configure school information and academic year.</p>
-<button onclick="openPage('settings.html')">Open</button>
-</div></div>
-</div><div class="panel">
-<h2>System Notice</h2>
-<p class="notice">
-This dashboard is a frontend prototype. Supabase authentication,
-school-specific permissions and database records must be configured
-before using real school data.
-</p>
-</div></main>
-</div><script>
-function openPage(page){
-window.location.href=page;
-}
-</script></body>
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#172337}
+header{background:var(--navy);color:white;padding:20px}
+header h2{margin:0 0 6px}
+header p{margin:0;color:#cbd5e1;font-size:14px}
+nav{background:white;padding:12px 20px;border-bottom:1px solid var(--line)}
+nav a{color:var(--blue);text-decoration:none;font-weight:bold}
+main{max-width:1100px;margin:25px auto;padding:0 16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.card,.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:20px}
+.stat-number{font-size:28px;font-weight:bold;margin-top:8px}
+.panel{margin-bottom:20px}
+h3{margin-top:0}
+form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1/-1}
+label{font-size:14px;font-weight:bold}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:7px;font-size:15px;background:white}
+button{border:0;border-radius:7px;padding:12px 16px;background:var(--blue);color:white;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.secondary{background:#e8eef8;color:#17345a}
+.danger{background:#b42318}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.message{padding:12px;border-radius:8px;margin:12px 0;display:none;white-space:pre-wrap;overflow-wrap:anywhere}
+.success{display:block;background:#dcfce7;color:#166534}
+.error{display:block;background:#fee2e2;color:#991b1b}
+.info{display:block;background:#dbeafe;color:#1e40af}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);font-size:14px}
+th{background:#f8fafc}
+.status{padding:5px 9px;border-radius:20px;background:#e2e8f0;display:inline-block}
+small,.muted{color:#64748b}
+@media(max-width:650px){.stats{grid-template-columns:1fr}form{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h2>My School System</h2>
+  <p>Developer Panel / School Administrators</p>
+</header>
+<nav>
+  <a href="developer-dashboard.html">← Back to Developer Dashboard</a>
+</nav>
+
+<main>
+  <div id="message" class="message" role="status" aria-live="polite"></div>
+
+  <section class="stats">
+    <div class="card">
+      <div class="muted">Registered schools</div>
+      <div class="stat-number" id="schoolCount">—</div>
+    </div>
+    <div class="card">
+      <div class="muted">Administrator profiles</div>
+      <div class="stat-number" id="adminCount">—</div>
+    </div>
+    <div class="card">
+      <div class="muted">Active administrators</div>
+      <div class="stat-number" id="activeCount">—</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>Register School Administrator</h3>
+    <p class="muted">Choose one registered school. The administrator will be invited by email.</p>
+
+    <form id="adminForm">
+      <div class="field">
+        <label for="fullName">Administrator's full name *</label>
+        <input id="fullName" name="fullName" required maxlength="120"
+               autocomplete="name" placeholder="Enter full name">
+      </div>
+
+      <div class="field">
+        <label for="email">Email address *</label>
+        <input id="email" name="email" type="email" required maxlength="254"
+               autocomplete="email" placeholder="admin@example.com">
+      </div>
+
+      <div class="field">
+        <label for="phone">Phone number</label>
+        <input id="phone" name="phone" type="tel" maxlength="30"
+               autocomplete="tel" placeholder="+254 7XX XXX XXX">
+      </div>
+
+      <div class="field">
+        <label for="school">Assign one school *</label>
+        <select id="school" name="school" required>
+          <option value="">Loading registered schools...</option>
+        </select>
+      </div>
+
+      <div class="field full">
+        <label for="notes">Notes (optional)</label>
+        <input id="notes" name="notes" maxlength="500"
+               placeholder="Optional administrative notes">
+      </div>
+
+      <div class="field full">
+        <div class="actions">
+          <button id="inviteButton" type="submit">Send Invitation</button>
+          <button class="secondary" type="button" id="refreshButton">
+            Refresh Data
+          </button>
+        </div>
+        <small>The server must verify developer permissions before sending invitations.</small>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h3>School Administrators</h3>
+    <div class="field" style="margin-bottom:15px">
+      <label for="filter">Filter by school</label>
+      <select id="filter">
+        <option value="">All schools</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>School</th>
+            <th>Status</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody id="adminRows">
+          <tr><td colspan="5">Loading administrator profiles...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // Use the SAME Supabase project URL and publishable/anon key
+  // as your existing working login and developer dashboard.
+  const SUPABASE_URL = "https://apshhzczrofxwjsgenlv.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_I6kPWgrxTxCgo_EUCGucLA_LtiJXtyP";
+
+  // These names must match your existing database schema.
+  const SCHOOLS_TABLE = "msys_schools";
+  const PROFILES_TABLE = "msys_user_profiles";
+
+  const $ = id => document.getElementById(id);
+  const message = $("message");
+  let db = null;
+  let schools = [];
+  let admins = [];
+
+  function showMessage(text, type = "info") {
+    message.className = "message " + type;
+    message.textContent = text;
+    message.style.display = "block";
+  }
+
+  function clearMessage() {
+    message.className = "message";
+    message.textContent = "";
+    message.style.display = "none";
+  }
+
+  function safeText(value) {
+    return value == null || value === "" ? "—" : String(value);
+  }
+
+  function addOption(select, value, label) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    select.appendChild(option);
+  }
+
+  function populateSchools() {
+    const schoolSelect = $("school");
+    const filter = $("filter");
+    schoolSelect.replaceChildren();
+    filter.replaceChildren();
+
+    addOption(schoolSelect, "", "Select a registered school");
+    addOption(filter, "", "All schools");
+
+    schools.forEach(school => {
+      addOption(schoolSelect, school.id, school.name);
+      addOption(filter, school.id, school.name);
+    });
+
+    $("schoolCount").textContent = schools.length;
+  }
+
+  async function loadSchools() {
+    // Adjust the selected columns if your existing table uses other names.
+    const { data, error } = await db
+      .from(SCHOOLS_TABLE)
+      .select("id, name, status")
+      .order("name");
+
+    if (error) {
+      throw new Error("Could not load schools: " + error.message);
+    }
+
+    // Only schools approved by the existing approval workflow are selectable.
+    schools = (data || []).filter(s =>
+      String(s.status || "").toLowerCase() === "approved"
+    );
+
+    populateSchools();
+
+    if (!schools.length) {
+      showMessage(
+        "No approved schools are available yet. Approve a school in the developer dashboard first.",
+        "info"
+      );
+    }
+  }
+
+  async function loadAdmins() {
+    // Assumed profile fields; align these with your actual table if necessary.
+    const { data, error } = await db
+      .from(PROFILES_TABLE)
+      .select("id, full_name, email, phone, school_id, role, status")
+      .eq("role", "school_admin")
+      .order("full_name");
+
+    if (error) {
+      throw new Error("Could not load administrator profiles: " + error.message);
+    }
+
+    admins = data || [];
+    $("adminCount").textContent = admins.length;
+    $("activeCount").textContent = admins.filter(a =>
+      String(a.status || "").toLowerCase() === "active"
+    ).length;
+
+    renderAdmins();
+  }
+
+  function renderAdmins() {
+    const rows = $("adminRows");
+    const schoolFilter = $("filter").value;
+    rows.replaceChildren();
+
+    const filtered = admins.filter(a =>
+      !schoolFilter || String(a.school_id) === String(schoolFilter)
+    );
+
+    if (!filtered.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.textContent = "No administrator profiles found.";
+      tr.appendChild(td);
+      rows.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(admin => {
+      const tr = document.createElement("tr");
+      const school = schools.find(s =>
+        String(s.id) === String(admin.school_id)
+      );
+
+      [
+        safeText(admin.full_name),
+        safeText(admin.email),
+        school ? school.name : "School ID: " + safeText(admin.school_id),
+        safeText(admin.status),
+        safeText(admin.role)
+      ].forEach(value => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.appendChild(td);
+      });
+
+      rows.appendChild(tr);
+    });
+  }
+
+  async function refresh() {
+    clearMessage();
+
+    try {
+      await loadSchools();
+      await loadAdmins();
+    } catch (error) {
+      showMessage(error.message, "error");
+    }
+  }
+
+  $("adminForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    clearMessage();
+
+    const button = $("inviteButton");
+    const schoolId = $("school").value;
+    const school = schools.find(s => String(s.id) === String(schoolId));
+
+    if (!school) {
+      showMessage("Select an approved school before sending the invitation.", "error");
+      return;
+    }
+
+    const payload = {
+      full_name: $("fullName").value.trim(),
+      email: $("email").value.trim().toLowerCase(),
+      phone: $("phone").value.trim() || null,
+      school_id: school.id,
+      role: "school_admin",
+      notes: $("notes").value.trim() || null
+    };
+
+    if (!payload.full_name || !payload.email) {
+      showMessage("Enter the administrator's name and email.", "error");
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Sending invitation...";
+
+    try {
+      // This function must be deployed separately in Supabase.
+      // It must authenticate the caller, verify developer permissions,
+      // invite the email using the server-side Admin API, and create/update
+      // the profile with the selected school_id and school_admin role.
+      const { data, error } = await db.functions.invoke(
+        "invite-school-admin",
+        { body: payload }
+      );
+
+      if (error) {
+        throw new Error(
+          "Invitation failed. Check that the invite-school-admin Supabase " +
+          "Edge Function is deployed and that you have developer access. " +
+          error.message
+        );
+      }
+
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
+
+      showMessage(
+        "Invitation request completed. " +
+        "Check the administrator's email and confirm the profile in Supabase. " +
+        "Server response: " + JSON.stringify(data || {}),
+        "success"
+      );
+
+      $("adminForm").reset();
+      await refresh();
+
+    } catch (error) {
+      showMessage(error.message || "Unexpected error.", "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = "Send Invitation";
+    }
+  });
+
+  $("refreshButton").addEventListener("click", refresh);
+  $("filter").addEventListener("change", renderAdmins);
+
+  async function start() {
+    if (
+      SUPABASE_URL.includes("PASTE_YOUR") ||
+      SUPABASE_ANON_KEY.includes("PASTE_YOUR")
+    ) {
+      showMessage(
+        "Setup needed: paste the Supabase URL and publishable key from your existing dashboard into this file.",
+        "info"
+      );
+      return;
+    }
+
+    if (!window.supabase) {
+      showMessage("Supabase library failed to load. Check your internet connection.", "error");
+      return;
+    }
+
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Require a signed-in user. The Edge Function must additionally
+    // verify that the user has developer-level authorization.
+    const { data, error } = await db.auth.getSession();
+
+    if (error || !data.session) {
+      showMessage(
+        "Please sign in through your existing My School System login first.",
+        "error"
+      );
+      return;
+    }
+
+    await refresh();
+  }
+
+  start();
+})();
+</script>
+</body>
 </html>
